@@ -1,5 +1,4 @@
-
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { CategoryProvider, useCategoryContext } from "../../../context/CategoryContext";
 import CategoryTreeView from "../category/CategoryTreeView";
 import CategoryForm from "../category/CategoryForm";
@@ -8,13 +7,13 @@ const CategoryListContent = () => {
   const { error } = useCategoryContext();
   const [selectedCategory, setSelectedCategory] = useState(null);
 
-  const handleSelectCategory = (category) => {
+  const handleSelectCategory = useCallback((category) => {
     setSelectedCategory(category);
-  };
+  }, []);
 
-  const handleFormSuccess = () => {
-    setSelectedCategory(null); // ✅ clears edit mode
-  };
+  const handleFormSuccess = useCallback(() => {
+    setSelectedCategory(null);
+  }, []);
 
   return (
     <div className="min-h-screen p-2 lg:p-2">
@@ -25,6 +24,7 @@ const CategoryListContent = () => {
       )}
 
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+        
         <CategoryTreeView
           selectedCategory={selectedCategory}
           onSelectCategory={handleSelectCategory}
@@ -40,12 +40,10 @@ const CategoryListContent = () => {
   );
 };
 
-const Categorypage = () => {
-  return (
-    <CategoryProvider>
-      <CategoryListContent />
-    </CategoryProvider>
-  );
-};
+const CategoryPage = () => (
+  <CategoryProvider>
+    <CategoryListContent />
+  </CategoryProvider>
+);
 
-export default Categorypage;
+export default CategoryPage;

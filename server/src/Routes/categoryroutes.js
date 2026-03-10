@@ -4,6 +4,7 @@ import {
   getCategories,
   updateCategory,
   deleteCategory,
+  bulkUploadCategories,
 } from "../Controllers/categorycontroller.js";
 import { authmiddleware } from "../Middlewares/auth/authmiddleware.js";
 import upload from "../utils/upload.js";
@@ -14,15 +15,16 @@ router.post(
   "/:adminId/create-category",
   upload("category").single("image"),
   authmiddleware,
-  createCategory
+  createCategory,
 );
 router.get("/:adminId/get-category", authmiddleware, getCategories);
 router.put(
   "/:adminId/update/:id",
   upload("category").single("image"),
   authmiddleware,
-  updateCategory
+  updateCategory,
 );
 router.delete("/:adminId/delete/:id", authmiddleware, deleteCategory);
+router.post("/:adminId/bulk-upload-category", authmiddleware, bulkUploadCategories);
 
 export default router;

@@ -4,21 +4,22 @@ import { DeleteObjectCommand } from "@aws-sdk/client-s3";
 import s3 from "../Config/s3.js";
 import { ENV } from "../Config/env.js";
 
-/* 🔹 SLUG GENERATOR (SAFE) */
+
 const generateSlug = (name) => {
     const base = name
         .toLowerCase()
         .trim()
-        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/[^a-z0-9]+/g, "-")    
         .replace(/(^-|-$)/g, "");
 
-    return `${base}-${Math.floor(1000 + Math.random() * 9000)}`;
+    return `${base}-${Math.floor(1000 + Math.random() * 9000)}`; 
 };
 
 export const createProduct = async (req, res) => {
     try {
         const {
             name,
+            productId,
             description,
             price,
             oldPrice,
@@ -29,6 +30,7 @@ export const createProduct = async (req, res) => {
             subCategory,
             rams,
             sizes,
+            colors,
             weightValue,
             weightUnit,
             rating,
@@ -41,6 +43,16 @@ export const createProduct = async (req, res) => {
             return res.status(400).json({ message: "Product name required" });
         }
 
+        if (!productId) {
+            return res.status(400).json({ message: "Product ID required" });
+        }
+
+        /* ---------- PREVENT DUPLICATE PRODUCT ID ---------- */
+        const existing = await Product.findOne({ productId });
+        if (existing) {
+            return res.status(400).json({ message: "Product ID already exists" });
+        }
+
         /* ---------- IMAGES ---------- */
         if (!req.files || req.files.length === 0) {
             return res.status(400).json({ message: "At least one image is required" });
@@ -51,39 +63,37 @@ export const createProduct = async (req, res) => {
         /* ---------- SAFE PARSING ---------- */
         let parsedRams = [];
         let parsedSizes = [];
+        let parsedColors = [];
 
         try {
             parsedRams = rams ? JSON.parse(rams) : [];
             parsedSizes = sizes ? JSON.parse(sizes) : [];
-        } catch (e) {
-            return res.status(400).json({ message: "Invalid RAM or Size format" });
+            parsedColors = colors ? JSON.parse(colors) : [];
+        } catch {
+            return res.status(400).json({ message: "Invalid array format" });
         }
 
         /* ---------- CREATE PRODUCT ---------- */
         const product = await Product.create({
+            productId,
             name,
-            slug: generateSlug(name), // ✅ FIXED (was missing)
+            slug: generateSlug(name),
             description,
-
-            price: price ? Number(price) : undefined,
-            oldPrice: oldPrice ? Number(oldPrice) : undefined,
-            stock: stock ? Number(stock) : undefined,
-            discount: discount ? Number(discount) : undefined,
-
+            price: price ? Number(price) : 0,
+            oldPrice: oldPrice ? Number(oldPrice) : 0,
+            stock: stock ? Number(stock) : 0,
+            discount: discount ? Number(discount) : 0,
             brand,
             category,
             subCategory,
-
             rams: parsedRams,
             sizes: parsedSizes,
-
+            colors: parsedColors,
             weight: {
-                value: weightValue ? Number(weightValue) : undefined,
+                value: weightValue ? Number(weightValue) : 0,
                 unit: weightUnit,
             },
-
             rating: rating ? Number(rating) : 1,
-
             images,
             adminId,
         });
@@ -99,7 +109,6 @@ export const createProduct = async (req, res) => {
     }
 };
 
-
 export const getCategories = async (req, res) => {
     try {
         const categories = await Category.find({
@@ -107,21 +116,36 @@ export const getCategories = async (req, res) => {
             status: "active",
         }).select("name slug");
 
+        const lastProduct = await Product.findOne({
+            productId: { $exists: true },
+        })
+            .sort({ productId: -1 })
+            .select("productId");
+
+        let next = 1;
+
+        if (lastProduct?.productId) {
+            next = Number(lastProduct.productId.split("-")[1]) + 1;
+        }
+
+        const nextProductId = `PROD-${String(next).padStart(4, "0")}`;
+
+
         res.json({
             success: true,
             data: categories,
+            productId: nextProductId, 
         });
     } catch (err) {
+        console.error(err);
         res.status(500).json({ message: "Server error" });
     }
 };
-
 
 export const getSubCategories = async (req, res) => {
     try {
         const { categorySlug } = req.params;
 
-        // 1️⃣ Find parent category
         const parentCategory = await Category.findOne({
             slug: categorySlug,
             parentId: null,
@@ -134,7 +158,6 @@ export const getSubCategories = async (req, res) => {
             });
         }
 
-        // 2️⃣ Find subcategories using parentId
         const subCategories = await Category.find({
             parentId: parentCategory._id,
             status: "active",
@@ -149,7 +172,6 @@ export const getSubCategories = async (req, res) => {
         res.status(500).json({ message: "Server error" });
     }
 };
-
 
 export const getProducts = async (req, res) => {
     try {
@@ -212,8 +234,6 @@ export const getProducts = async (req, res) => {
     }
 };
 
-
-// controllers/product.controller.js
 export const deleteProduct = async (req, res) => {
     try {
         const product = await Product.findByIdAndDelete(req.params.id);
@@ -228,7 +248,6 @@ export const deleteProduct = async (req, res) => {
     }
 };
 
-
 export const getSingleProduct = async (req, res) => {
     const product = await Product.findById(req.params.id);
 
@@ -239,17 +258,10 @@ export const getSingleProduct = async (req, res) => {
     res.json({ success: true, data: product });
 };
 
-
 export const updateProduct = async (req, res) => {
     try {
         const { id } = req.params;
-
-        // 🔥 SAFETY GUARD
         const body = req.body || {};
-        console.log("BODY:", req.body);
-        console.log("FILES:", req.files);
-
-
         const {
             name,
             description,
@@ -274,7 +286,6 @@ export const updateProduct = async (req, res) => {
             return res.status(404).json({ message: "Product not found" });
         }
 
-        /* ---------- PARSE EXISTING IMAGES ---------- */
         let keptImages = [];
 
         if (existingImages) {
@@ -285,9 +296,6 @@ export const updateProduct = async (req, res) => {
             }
         }
 
-
-        /* ---------- DELETE REMOVED IMAGES FROM S3 ---------- */
-        /* ---------- DELETE REMOVED IMAGES FROM S3 ---------- */
         const removedImages = product.images.filter(
             (img) => !keptImages.includes(img)
         );
@@ -373,4 +381,73 @@ export const updateProduct = async (req, res) => {
         res.status(500).json({ message: "Server error" });
     }
 };
+
+export const bulkUploadProducts = async (req, res) => {
+  try {
+    const { products } = req.body;
+
+    if (!products || !Array.isArray(products) || products.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid products data",
+      });
+    }
+
+    const adminId = req.user?.id; 
+
+    if (!adminId) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized",
+      });
+    }
+
+    const lastProduct = await Product.findOne({})
+      .sort({ productId: -1 })
+      .select("productId");
+
+    let lastNumber = 0;
+
+    if (lastProduct?.productId) {
+      const match = lastProduct.productId.match(/\d+/);
+      if (match) {
+        lastNumber = parseInt(match[0], 10);
+      }
+    }
+
+    const formattedProducts = products.map((item, index) => {
+      const newNumber = lastNumber + index + 1;
+
+      return {
+        name: item.name?.trim(),
+        slug: generateSlug(item.name),
+        productId: `PRD${String(newNumber).padStart(5, "0")}`,
+        description: item.description || "",
+        price: Number(item.price),
+        oldPrice: Number(item.oldPrice) || 0,
+        stock: Number(item.stock),
+        brand: item.brand,
+        category: item.category,
+        subCategory: item.subCategory || "",
+        adminId: adminId,   
+      };
+    });
+
+    const insertedProducts = await Product.insertMany(formattedProducts);
+
+    return res.status(201).json({
+      success: true,
+      insertedCount: insertedProducts.length,
+    });
+
+  } catch (error) {
+    console.error("Bulk Upload Error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: error.message, // show real error for debugging
+    });
+  }
+};
+
 

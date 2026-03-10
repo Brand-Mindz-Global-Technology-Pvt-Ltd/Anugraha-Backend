@@ -15,7 +15,6 @@ export const uploadBannerImage = async (req, res) => {
     }
 };
 
-
 export const getBannerImages = async (req, res) => {
     try {
         const adminId = req.user.id; 
@@ -30,35 +29,25 @@ export const getBannerImages = async (req, res) => {
     }
 };
 
-
 export const deleteBannerImage = async (req, res) => {
     try {
         const { id } = req.params;
-
         const banner = await Banner.findById(id);
         if (!banner) {
             return res.status(404).json({ message: "Slider not found" });
         }
-
-        // Extract S3 key from URL
         const imageUrl = banner.image;
         const key = imageUrl.split(".amazonaws.com/")[1];
-
         if (!key) {
             return res.status(400).json({ message: "Invalid S3 image path" });
         }
-
-        // Delete from S3 (AWS SDK v3)
         await s3.send(
             new DeleteObjectCommand({
                 Bucket: process.env.AWS_BUCKET_NAME,
                 Key: key,
             })
         );
-
-        // Delete from DB
         await banner.deleteOne();
-
         res.json({ message: "Slider deleted successfully" });
     } catch (err) {
         console.error("Delete error:", err);

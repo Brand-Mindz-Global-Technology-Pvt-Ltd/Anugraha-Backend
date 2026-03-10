@@ -7,6 +7,7 @@ import {
   deleteProduct,
   getSingleProduct,
   updateProduct,
+  bulkUploadProducts,
 } from "../Controllers/productcontroller.js";
 import upload from "../utils/upload.js";
 import { authmiddleware } from "../Middlewares/auth/authmiddleware.js";
@@ -18,7 +19,7 @@ router.post(
   "/",
   authmiddleware,
   upload("product").array("images", 4),
-  createProduct
+  createProduct,
 );
 
 /* CATEGORIES */
@@ -35,7 +36,8 @@ router.put(
   "/:id", // ✅ FIXED
   authmiddleware,
   upload("product").array("images", 4),
-  updateProduct
+  updateProduct,
 );
 
+router.post("/bulk-upload", authmiddleware, bulkUploadProducts);
 export default router;

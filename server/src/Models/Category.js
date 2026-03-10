@@ -56,7 +56,7 @@ const categorySchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-/* ---------- UNIQUE SLUG PER ADMIN ---------- */
+
 categorySchema.index(
   { adminId: 1, slug: 1 },
   { unique: true }

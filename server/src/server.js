@@ -1,6 +1,7 @@
 import app from "./app.js";
 import { connectDB } from "./Config/db.js";
 import { ENV } from "./Config/env.js";
+import "./utils/jobs/lowStockMonitor.js";
 
 connectDB();
 

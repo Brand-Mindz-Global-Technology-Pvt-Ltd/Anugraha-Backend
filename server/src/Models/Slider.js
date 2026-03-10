@@ -6,7 +6,6 @@ const sliderSchema = new mongoose.Schema(
             type: String,
             required: true,
         },
-
         adminId: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "admin",

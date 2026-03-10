@@ -15,7 +15,6 @@ export const uploadSliderImage = async (req, res) => {
     }
 };
 
-
 export const getSliderImages = async (req, res) => {
     try {
         const adminId = req.user.id; // from authmiddleware
@@ -31,7 +30,6 @@ export const getSliderImages = async (req, res) => {
         res.status(500).json({ message: "Failed to fetch slider images" });
     }
 };
-
 
 export const deleteSliderImage = async (req, res) => {
     try {

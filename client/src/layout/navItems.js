@@ -5,6 +5,7 @@ import {
   LayoutGrid,
   Package,
   Boxes,
+  Settings2,
 } from "lucide-react";
 
 export const navItems = [
@@ -18,11 +19,8 @@ export const navItems = [
 
   {
     label: "Products",
+    to: "/admin/products",
     icon: Package,
-    children: [
-      { label: "Products", to: "/admin/products" },
-      { label: "Add Product", to: "/admin/products/new" },
-    ],
   },
   {
     label: "Orders",
@@ -38,7 +36,9 @@ export const navItems = [
       { label: "Home Slider", to: "/admin/cms/home-slider" },
       { label: "Banners", to: "/admin/cms/banners" },
     ],
+
   },
 
   { label: "Profile", to: "/admin/profile", icon: Users },
+  { label: "Settings", to: "/admin/settings", icon: Settings2 },
 ];

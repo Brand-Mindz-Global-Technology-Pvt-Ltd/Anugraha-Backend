@@ -34,18 +34,12 @@ export default function InfoSection({ title }) {
   const [editMode, setEditMode] = useState(false);
   const [fields, setFields] = useState(FIELD_TEMPLATE);
 
-  /* ===============================
-     🔧 SYNC PROFILE → FIELDS
-     =============================== */
   useEffect(() => {
     const social = profile?.socialLinks || {};
-
     setFields((prev) =>
       prev.map((field) => {
         let value = field.value;
-
         if (field.key === "profileImage") {
-          // 🔧 CHANGED: backend now returns { key, url }
           value = profile?.profileImage?.url || "";
         } else if (field.key === "email") {
           value = email || "";
@@ -54,7 +48,6 @@ export default function InfoSection({ title }) {
         } else if (field.key in (profile || {})) {
           value = profile[field.key] || "";
         }
-
         return { ...field, value };
       })
     );
@@ -75,16 +68,14 @@ export default function InfoSection({ title }) {
       const updated = [...prev];
       updated[index] = {
         ...updated[index],
-        value: URL.createObjectURL(file), // preview
+        value: URL.createObjectURL(file),
         file,
       };
       return updated;
     });
   };
 
-  /* ===============================
-     SAVE PROFILE
-     =============================== */
+
   const handleSave = async () => {
     try {
       const formData = new FormData();
@@ -103,10 +94,7 @@ export default function InfoSection({ title }) {
           formData.append(field.key, field.value || "");
         }
       });
-
-      // 🔧 CHANGED: backend expects social links separately
       formData.append("socialLinks", JSON.stringify(socialLinks));
-
       await updateProfile(formData);
       setEditMode(false);
       alert("Profile updated successfully");

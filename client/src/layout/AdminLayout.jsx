@@ -5,6 +5,7 @@ import Sidebar from "../layout/Sidebar";
 import Topbar from "../layout/Topbar";
 import { useAuth } from "../context/Authcontext";
 import { ProfileProvider } from "../context/ProfileContext";
+import Breadcrumbs from "./Breadcrumbs";
 
 export default function AdminLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -54,6 +55,7 @@ export default function AdminLayout() {
         <ProfileProvider>
           <Topbar onMenu={() => setSidebarOpen(true)} />
           <main className="flex-1 px-2 md:px-2 py-4">
+            <Breadcrumbs/>
             <div>
               <Outlet />
             </div>

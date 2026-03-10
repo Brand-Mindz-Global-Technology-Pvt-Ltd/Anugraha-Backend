@@ -9,7 +9,7 @@ import { ENV } from "../Config/env.js";
 ===================================================== */
 export const createCategory = async (req, res) => {
   try {
-    const { adminId } = req.params; // ✅ ONLY SOURCE
+    const { adminId } = req.params; 
     const { name, slug, parentId = null, status, metaTitle = "" } = req.body;
 
     if (!name || !slug) {
@@ -31,7 +31,7 @@ export const createCategory = async (req, res) => {
       : { key: "", url: "" };
 
     const category = await Category.create({
-      adminId, // ✅ PARAM BASED
+      adminId, 
       name: name.trim(),
       slug: slug.toLowerCase().trim(),
       parentId,
@@ -54,9 +54,6 @@ export const createCategory = async (req, res) => {
   }
 };
 
-/* =====================================================
-   GET CATEGORIES (ADMIN – TREE)
-===================================================== */
 const buildTree = (categories, parentId = null) =>
   categories
     .filter((cat) => String(cat.parentId ?? null) === String(parentId))
@@ -67,7 +64,7 @@ const buildTree = (categories, parentId = null) =>
 
 export const getCategories = async (req, res) => {
   try {
-    const { adminId } = req.params; // ✅ ONLY SOURCE
+    const { adminId } = req.params; 
 
     const categories = await Category.find({ adminId }).lean();
     const tree = buildTree(categories);
@@ -86,12 +83,9 @@ export const getCategories = async (req, res) => {
   }
 };
 
-/* =====================================================
-   UPDATE CATEGORY
-===================================================== */
 export const updateCategory = async (req, res) => {
   try {
-    const { adminId, id } = req.params; // ✅ ONLY SOURCE
+    const { adminId, id } = req.params; 
     const { name, slug, parentId, status, metaTitle } = req.body;
 
     const category = await Category.findOne({ _id: id, adminId });
@@ -160,9 +154,7 @@ export const updateCategory = async (req, res) => {
   }
 };
 
-/* =====================================================
-   DELETE CATEGORY
-===================================================== */
+
 export const deleteCategory = async (req, res) => {
   try {
     const { adminId, id } = req.params; // ✅ ONLY SOURCE
@@ -200,6 +192,118 @@ export const deleteCategory = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Failed to delete category",
+    });
+  }
+};
+
+
+export const bulkUploadCategories = async (req, res) => {
+  try {
+    const { adminId } = req.params;
+    const { categories } = req.body;
+
+    if (!adminId) {
+      return res.status(400).json({
+        success: false,
+        message: "Admin ID is required",
+      });
+    }
+
+    if (!Array.isArray(categories) || categories.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Categories array is required",
+      });
+    }
+
+    // Normalize input properly
+    const normalized = categories
+      .filter((item) => item?.name)
+      .map((item) => ({
+        name: item.name.trim(),
+        slug: item.slug
+          ? item.slug.toLowerCase().trim()
+          : generateSlug(item.name),
+        parentSlug: item.parentSlug
+          ? item.parentSlug.toLowerCase().trim()
+          : null,
+        metaTitle: item.metaTitle?.trim() || "",
+      }));
+
+    const slugToIdMap = new Map();
+    const createdCategories = [];
+
+    // 🔹 First fetch existing categories (important fix)
+    const existingCategories = await Category.find({ adminId });
+
+    for (const cat of existingCategories) {
+      slugToIdMap.set(cat.slug, cat._id);
+    }
+
+    const pending = [...normalized];
+
+    while (pending.length > 0) {
+      let progress = false;
+
+      for (let i = 0; i < pending.length; i++) {
+        const category = pending[i];
+
+        // Check parent resolution
+        if (!category.parentSlug || slugToIdMap.has(category.parentSlug)) {
+          let parentId = null;
+
+          if (category.parentSlug) {
+            parentId = slugToIdMap.get(category.parentSlug);
+          }
+
+          // Ensure unique slug
+          let finalSlug = category.slug;
+          let counter = 1;
+
+          while (
+            await Category.exists({ slug: finalSlug, adminId })
+          ) {
+            finalSlug = `${category.slug}-${counter++}`;
+          }
+
+          const newCategory = await Category.create({
+            adminId,
+            name: category.name,
+            slug: finalSlug,
+            parentId,
+            status: "active",
+            metaTitle: category.metaTitle,
+            image: { key: "", url: "" },
+          });
+
+          slugToIdMap.set(finalSlug, newCategory._id);
+          createdCategories.push(newCategory);
+
+          pending.splice(i, 1);
+          i--;
+          progress = true;
+        }
+      }
+
+      if (!progress) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid parent hierarchy detected",
+        });
+      }
+    }
+
+    return res.status(201).json({
+      success: true,
+      message: "Bulk upload completed successfully",
+      data: createdCategories,
+    });
+
+  } catch (error) {
+    console.error("Bulk Upload Categories Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Bulk upload failed",
     });
   }
 };

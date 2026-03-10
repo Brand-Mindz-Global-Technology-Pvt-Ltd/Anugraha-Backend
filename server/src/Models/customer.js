@@ -1,11 +1,18 @@
 import mongoose from "mongoose";
+
 const customerSchema = new mongoose.Schema(
   {
+    customerId: {
+      type: String,
+      required: true,
+      unique: true,
+      trim: true,
+    },
+
     name: {
       type: String,
       required: true,
       trim: true,
-      maxlength: 100,
     },
 
     email: {
@@ -14,32 +21,24 @@ const customerSchema = new mongoose.Schema(
       unique: true,
       lowercase: true,
       trim: true,
-      index: true,
+      match: [/^\S+@\S+\.\S+$/, "Please use a valid email address"],
     },
 
-    phone: {
+    password: {
       type: String,
       required: true,
-      trim: true,
-    },
-
-    country: {
-      type: String,
-      required: true,
-      trim: true,
+      minlength: 6,
+      select: false,
     },
 
     status: {
       type: String,
-      enum: ["Active", "Inactive"],
+      enum: ["Active", "Inactive", "Blocked"],
       default: "Active",
-      index: true,
     },
 
-    isDeleted: {
-      type: Boolean,
-      default: false,
-    },
+    resetPasswordToken: String,
+    resetPasswordExpire: Date,
   },
   {
     timestamps: true,
@@ -47,7 +46,8 @@ const customerSchema = new mongoose.Schema(
   }
 );
 
-/* ---------- INDEXES ---------- */
-customerSchema.index({ name: "text", email: "text" });
+customerSchema.index({ name: 1 });
+customerSchema.index({ status: 1 });
+const Customer = mongoose.model("Customer", customerSchema);
 
-export default mongoose.model("Customer", customerSchema);
+export default Customer;

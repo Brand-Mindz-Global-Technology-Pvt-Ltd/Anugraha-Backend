@@ -1,7 +1,6 @@
 import Product from "../Models/Product.js";
 import Category from "../Models/Category.js";
 
-// Get all products with filters & pagination
 export const getInventory = async (req, res) => {
   try {
     const {
@@ -70,7 +69,6 @@ export const getActiveCategories = async (req, res) => {
   }
 };
 
-
 export const exportInventoryCSV = async (req, res) => {
   try {
     const { search = "", category = "", status = "" } = req.query;
@@ -121,3 +119,7 @@ export const exportInventoryCSV = async (req, res) => {
     res.status(500).json({ success: false, message: "Export failed" });
   }
 };
+
+
+
+

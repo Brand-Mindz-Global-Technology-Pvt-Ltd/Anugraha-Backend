@@ -1,4 +1,3 @@
-// src/components/CategoryTreeItem.jsx
 import { ChevronDown, FolderTree, Pencil, Trash2 } from "lucide-react";
 
 const CategoryTreeItem = ({ 

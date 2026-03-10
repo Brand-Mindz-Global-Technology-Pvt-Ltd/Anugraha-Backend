@@ -1,10 +1,9 @@
 import mongoose from "mongoose";
 
-/* ------------------------------- Admin -------------------------------- */
 
 const adminSchema = new mongoose.Schema(
   {
-    username: {
+    username: { 
       type: String,
       required: true,
       trim: true,
@@ -48,7 +47,6 @@ const adminSchema = new mongoose.Schema(
         default: "",
       },
 
-      /* ---------- Profile Image ---------- */
       profileImage: {
         key: {
           type: String,
@@ -68,7 +66,6 @@ const adminSchema = new mongoose.Schema(
         default: "",
       },
 
-      /* ---------- Social Links (single fields) ---------- */
       socialLinks: {
         facebook: {
           type: String,
@@ -108,13 +105,10 @@ const adminSchema = new mongoose.Schema(
       },
     },
 
-    /* ------------------------------- Meta ------------------------------- */
-
     lastLoginAt: {
       type: Date,
       default: null,
     },
-
     acceptTerms: {
       type: Boolean,
       required: true,
@@ -123,17 +117,14 @@ const adminSchema = new mongoose.Schema(
         message: "Terms & Conditions must be accepted",
       },
     },
-
     acceptedTermsAt: {
       type: Date,
       default: Date.now,
     },
-
     resetPasswordToken: {
       type: String,
       default: null,
     },
-
     resetPasswordExpire: {
       type: Date,
       default: null,
@@ -141,7 +132,6 @@ const adminSchema = new mongoose.Schema(
     isDeleted: { type: Boolean, default: false },
     deletedAt: Date,
   },
-
   {
     timestamps: true,
   }

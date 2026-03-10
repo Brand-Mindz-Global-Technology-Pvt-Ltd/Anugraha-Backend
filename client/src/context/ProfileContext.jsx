@@ -38,7 +38,7 @@ export const ProfileProvider = ({ children }) => {
             setProfile(data.profile || {});
             setEmail(data.email || "");
             setrole(data.role || "")
-            setusername(data.username || "")
+            setusername(data.profile?.firstName + " " + data.profile?.lastName || "")
         } catch (err) {
             setError(err.response?.data?.message || "Failed to fetch profile");
             console.error("Profile fetch error:", err);

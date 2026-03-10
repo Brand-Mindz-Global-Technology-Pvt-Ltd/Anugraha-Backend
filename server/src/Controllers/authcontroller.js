@@ -5,9 +5,7 @@ import { signToken } from "../utils/jwt.js";
 import { sendMail } from "../utils/mailer.js";
 import { resetPasswordTemplate } from "../utils/forgotpasswordtemplate.js";
 import { ENV } from "../Config/env.js";
-/**
- * REGISTER SUPER ADMIN
- */
+
 export const register = async (req, res) => {
   try {
     const { username, email, password, acceptTerms } = req.body;
@@ -47,9 +45,7 @@ export const register = async (req, res) => {
   }
 };
 
-/**
- * LOGIN SUPER ADMIN
- */
+
 export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -84,7 +80,6 @@ export const login = async (req, res) => {
   }
 };
 
-/* ---------------- FORGOT PASSWORD ---------------- */
 export const forgotPassword = async (req, res) => {
   const { email } = req.body;
   const admin = await Admin.findOne({ email });
@@ -114,7 +109,6 @@ export const forgotPassword = async (req, res) => {
   res.json({ message: "Reset link sent to email" });
 };
 
-/* ---------------- RESET PASSWORD ---------------- */
 export const resetPassword = async (req, res) => {
   const { token } = req.params;
   const { password } = req.body;

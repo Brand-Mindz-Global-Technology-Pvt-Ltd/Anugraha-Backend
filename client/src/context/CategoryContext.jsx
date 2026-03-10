@@ -146,6 +146,7 @@ export const CategoryProvider = ({ children }) => {
                 createCategory,
                 updateCategory,
                 deleteCategory,
+             
             }}
         >
             {children}
