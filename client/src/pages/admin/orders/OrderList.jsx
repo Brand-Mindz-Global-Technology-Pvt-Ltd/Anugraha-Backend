@@ -1,4 +1,3 @@
-
 import React, { useEffect } from "react";
 import { useOrders } from "../../../context/OrderContext";
 import {
@@ -44,10 +43,10 @@ const fmt = {
   date: (d) =>
     d
       ? new Date(d).toLocaleDateString("en-IN", {
-          day: "2-digit",
-          month: "short",
-          year: "numeric",
-        })
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+      })
       : "—",
 
   currency: (n) =>
@@ -160,23 +159,22 @@ export default function OrderList() {
   };
 
   return (
-    <div className="p-6 bg-white min-h-screen rounded-lg relative">
+    <div className="p-3 sm:p-6 bg-white min-h-screen rounded-lg relative">
       {/* TOAST */}
       {toast && (
         <div
-          className={`fixed top-5 right-5 z-[70] px-4 py-3 rounded-lg shadow-lg text-sm font-medium ${
-            toast.type === "error" ? "bg-red-600 text-white" : "bg-green-600 text-white"
-          }`}
+          className={`fixed top-5 right-5 z-[70] px-4 py-3 rounded-lg shadow-lg text-sm font-medium max-w-[calc(100vw-2.5rem)] ${toast.type === "error" ? "bg-red-600 text-white" : "bg-green-600 text-white"
+            }`}
         >
           {toast.msg}
         </div>
       )}
 
-      <div className="max-w-7xl mx-auto space-y-5">
+      <div className="max-w-7xl mx-auto space-y-4">
         {/* PAGE HEADER */}
-        <div className="flex justify-between items-center">
+        <div className="flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center">
           <div>
-            <h1 className="text-xl font-bold text-gray-800">Order Management</h1>
+            <h1 className="text-lg sm:text-xl font-bold text-gray-800">Order Management</h1>
             <p className="text-sm text-gray-400 mt-0.5">
               {loading ? "Loading…" : `${total} order${total !== 1 ? "s" : ""} total`}
             </p>
@@ -185,42 +183,43 @@ export default function OrderList() {
             <button
               onClick={loadOrders}
               disabled={loading}
-              className="flex items-center gap-2 border px-3 py-2 rounded-lg text-sm hover:bg-gray-50 disabled:opacity-50"
+              className="flex items-center gap-1.5 border px-3 py-2 rounded-lg text-sm hover:bg-gray-50 disabled:opacity-50"
             >
-              <RefreshCw size={15} className={loading ? "animate-spin" : ""} />
-              Refresh
+              <RefreshCw size={14} className={loading ? "animate-spin" : ""} />
+              <span className="hidden xs:inline">Refresh</span>
             </button>
             <button
               onClick={exportOrders}
-              className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700"
+              className="flex items-center gap-1.5 bg-blue-600 text-white px-3 py-2 rounded-lg text-sm hover:bg-blue-700"
             >
-              <Download size={15} />
-              Export CSV
+              <Download size={14} />
+              <span>Export CSV</span>
             </button>
           </div>
         </div>
 
-        {/* TABS */}
-        <div className="flex flex-wrap gap-2 text-sm border-b pb-3">
-          {TAB_FILTERS.map((tab) => (
-            <button
-              key={tab}
-              onClick={() => handleTabChange(tab)}
-              className={`px-3 py-1.5 rounded-full capitalize transition-colors ${
-                activeTab === tab
-                  ? "bg-blue-100 text-blue-600 font-semibold"
-                  : "text-gray-500 hover:text-gray-700"
-              }`}
-            >
-              {tab === "All" ? "All Orders" : STATUS_LABEL[tab]}
-            </button>
-          ))}
+        {/* TABS — horizontal scroll on mobile */}
+        <div className="overflow-x-auto -mx-3 sm:mx-0 pb-1">
+          <div className="flex gap-1.5 text-sm border-b pb-2 px-3 sm:px-0 min-w-max sm:min-w-0 sm:flex-wrap">
+            {TAB_FILTERS.map((tab) => (
+              <button
+                key={tab}
+                onClick={() => handleTabChange(tab)}
+                className={`px-3 py-1.5 rounded-full capitalize transition-colors whitespace-nowrap flex-shrink-0 ${activeTab === tab
+                    ? "bg-blue-100 text-blue-600 font-semibold"
+                    : "text-gray-500 hover:text-gray-700"
+                  }`}
+              >
+                {tab === "All" ? "All Orders" : STATUS_LABEL[tab]}
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* FILTER BAR */}
-        <div className="flex flex-wrap gap-3 items-center">
-          <div className="relative flex-1 min-w-[240px]">
-            <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+        <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
+          <div className="relative flex-1 min-w-0">
+            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
             <input
               value={search}
               onChange={(e) => handleSearchChange(e.target.value)}
@@ -231,7 +230,7 @@ export default function OrderList() {
           <select
             value={sort}
             onChange={(e) => handleSortChange(e.target.value)}
-            className="px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-200"
+            className="w-full sm:w-auto px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-200"
           >
             <option value="newest">Sort: Newest First</option>
             <option value="oldest">Sort: Oldest First</option>
@@ -243,9 +242,9 @@ export default function OrderList() {
         {/* ERROR */}
         {error && (
           <div className="flex items-center gap-3 bg-red-50 border border-red-200 rounded-lg p-4 text-red-600 text-sm">
-            <AlertCircle size={17} />
-            <span>{error}</span>
-            <button onClick={loadOrders} className="ml-auto underline text-xs">
+            <AlertCircle size={17} className="shrink-0" />
+            <span className="flex-1">{error}</span>
+            <button onClick={loadOrders} className="ml-auto underline text-xs whitespace-nowrap">
               Retry
             </button>
           </div>
@@ -290,13 +289,12 @@ export default function OrderList() {
               return (
                 <div
                   key={order.orderId}
-                  className={`bg-white border-2 border-dashed rounded-lg transition-opacity ${
-                    isBusy ? "opacity-60 pointer-events-none" : "border-gray-300"
-                  }`}
+                  className={`bg-white border-2 border-dashed rounded-lg transition-opacity ${isBusy ? "opacity-60 pointer-events-none" : "border-gray-300"
+                    }`}
                 >
                   {/* CARD HEADER */}
-                  <div className="flex justify-between items-center px-4 py-3 border-b bg-gray-50 rounded-t-lg text-sm">
-                    <div className="text-gray-600">
+                  <div className="flex flex-col gap-1 sm:flex-row sm:justify-between sm:items-center px-4 py-3 border-b bg-gray-50 rounded-t-lg text-sm">
+                    <div className="text-gray-600 text-xs sm:text-sm">
                       Customer{" "}
                       <span className="font-semibold text-gray-800">
                         {order.customerId?.name || "—"}
@@ -308,104 +306,140 @@ export default function OrderList() {
                       )}
                       {" "}• {fmt.date(order.createdAt)}
                     </div>
-                    <div className="text-gray-400 font-mono text-xs">#{order.orderId}</div>
+                    <div className="text-black font-bold text-xs">#{order.orderId}</div>
                   </div>
 
                   {/* ITEMS */}
                   {(order.items || []).map((item, idx) => (
                     <div
                       key={idx}
-                      className="grid grid-cols-1 md:grid-cols-6 gap-4 px-4 py-3 items-center border-b last:border-b-0"
+                      className="border-b last:border-b-0"
                     >
-                      <div className="flex gap-3 md:col-span-2">
+                      {/* DESKTOP: original 6-col grid */}
+                      <div className="hidden md:grid md:grid-cols-6 gap-4 px-4 py-3 items-center">
+                        {/* Col 1-2: image + name */}
+                        <div className="flex gap-3 md:col-span-2">
+                          <img
+                            src={item.image || "https://placehold.co/56x56?text=IMG"}
+                            alt={item.name}
+                            className="w-14 h-14 rounded-md object-cover border shrink-0"
+                            onError={(e) => { e.target.src = "https://placehold.co/56x56?text=IMG"; }}
+                          />
+                          <div>
+                            <p className="font-medium text-sm leading-snug">{item.name}</p>
+                            <p className="text-xs text-gray-400 mt-0.5">
+                              {[item.color && `Color: ${item.color}`, item.size && `Size: ${item.size}`].filter(Boolean).join(" • ")}
+                            </p>
+                            <p className="text-xs text-gray-400">Qty: {item.qty}</p>
+                          </div>
+                        </div>
+
+                        {/* Col 3: price */}
+                        <div className="text-sm font-semibold">
+                          {fmt.currency(item.price * item.qty)}
+                        </div>
+
+                        {/* Col 4: payment */}
+                        <div className="text-sm">
+                          <p className="text-gray-700">{fmt.payment(order.payment?.method)}</p>
+                          <p className={`text-xs capitalize mt-0.5 ${PAYMENT_STATUS_STYLE[order.payment?.status] || "text-gray-400"}`}>
+                            {order.payment?.status || "—"}
+                          </p>
+                        </div>
+
+                        {/* Col 5-6: status + cancel — only on last item */}
+                        {idx === (order.items?.length || 1) - 1 ? (
+                          <>
+                            <div className="flex flex-col gap-1">
+                              <div className="relative inline-block w-fit">
+                                <select
+                                  value={order.orderStatus}
+                                  disabled={isCancelled || isBusy}
+                                  onChange={(e) => handleStatusChange(order.orderId, e.target.value)}
+                                  className={`pl-3 pr-7 py-1 rounded-full text-xs font-medium border appearance-none cursor-pointer capitalize focus:outline-none disabled:opacity-60 disabled:cursor-not-allowed ${STATUS_STYLE[order.orderStatus] || "bg-gray-100 text-gray-600"}`}
+                                >
+                                  {ORDER_STATUSES.map((s) => (
+                                    <option key={s} value={s}>{STATUS_LABEL[s]}</option>
+                                  ))}
+                                </select>
+                                <ChevronDown size={12} className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" />
+                              </div>
+                              <p className="text-xs text-gray-400">Total: {fmt.currency(order.totalAmount)}</p>
+                              {order.cancelReason && (
+                                <p className="text-xs text-red-400 max-w-[160px] truncate" title={order.cancelReason}>
+                                  ✕ {order.cancelReason}
+                                </p>
+                              )}
+                            </div>
+                            <div className="flex flex-col gap-2">
+                              {!isCancelled && !isDelivered && (
+                                <button
+                                  onClick={() => setCancelTarget(order.orderId)}
+                                  className="border border-red-300 text-red-600 px-3 py-1.5 rounded-md text-xs hover:bg-red-50"
+                                >
+                                  Cancel Order
+                                </button>
+                              )}
+                            </div>
+                          </>
+                        ) : (
+                          <><div /><div /></>
+                        )}
+                      </div>
+
+                      {/* MOBILE: stacked layout */}
+                      <div className="flex md:hidden gap-3 items-start px-4 py-3">
                         <img
                           src={item.image || "https://placehold.co/56x56?text=IMG"}
                           alt={item.name}
                           className="w-14 h-14 rounded-md object-cover border shrink-0"
-                          onError={(e) => {
-                            e.target.src = "https://placehold.co/56x56?text=IMG";
-                          }}
+                          onError={(e) => { e.target.src = "https://placehold.co/56x56?text=IMG"; }}
                         />
-                        <div>
+                        <div className="flex-1 min-w-0">
                           <p className="font-medium text-sm leading-snug">{item.name}</p>
                           <p className="text-xs text-gray-400 mt-0.5">
-                            {[
-                              item.color && `Color: ${item.color}`,
-                              item.size && `Size: ${item.size}`,
-                            ]
-                              .filter(Boolean)
-                              .join(" • ")}
+                            {[item.color && `Color: ${item.color}`, item.size && `Size: ${item.size}`].filter(Boolean).join(" • ")}
                           </p>
                           <p className="text-xs text-gray-400">Qty: {item.qty}</p>
+                          <p className="text-sm font-semibold mt-1">{fmt.currency(item.price * item.qty)}</p>
+                          <p className="text-sm text-gray-700 mt-1">{fmt.payment(order.payment?.method)}</p>
+                          <p className={`text-xs capitalize ${PAYMENT_STATUS_STYLE[order.payment?.status] || "text-gray-400"}`}>
+                            {order.payment?.status || "—"}
+                          </p>
+
+                          {idx === (order.items?.length || 1) - 1 && (
+                            <div className="mt-2 flex flex-wrap items-center gap-2">
+                              <div className="relative inline-block">
+                                <select
+                                  value={order.orderStatus}
+                                  disabled={isCancelled || isBusy}
+                                  onChange={(e) => handleStatusChange(order.orderId, e.target.value)}
+                                  className={`pl-3 pr-7 py-1 rounded-full text-xs font-medium border appearance-none cursor-pointer capitalize focus:outline-none disabled:opacity-60 disabled:cursor-not-allowed ${STATUS_STYLE[order.orderStatus] || "bg-gray-100 text-gray-600"}`}
+                                >
+                                  {ORDER_STATUSES.map((s) => (
+                                    <option key={s} value={s}>{STATUS_LABEL[s]}</option>
+                                  ))}
+                                </select>
+                                <ChevronDown size={12} className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" />
+                              </div>
+                              <p className="text-xs text-gray-400">Total: {fmt.currency(order.totalAmount)}</p>
+                              {!isCancelled && !isDelivered && (
+                                <button
+                                  onClick={() => setCancelTarget(order.orderId)}
+                                  className="border border-red-300 text-red-600 px-3 py-1 rounded-md text-xs hover:bg-red-50 whitespace-nowrap"
+                                >
+                                  Cancel Order
+                                </button>
+                              )}
+                              {order.cancelReason && (
+                                <p className="text-xs text-red-400 w-full truncate" title={order.cancelReason}>
+                                  ✕ {order.cancelReason}
+                                </p>
+                              )}
+                            </div>
+                          )}
                         </div>
                       </div>
-
-                      <div className="text-sm font-semibold">
-                        {fmt.currency(item.price * item.qty)}
-                      </div>
-
-                      <div className="text-sm">
-                        <p className="text-gray-700">{fmt.payment(order.payment?.method)}</p>
-                        <p
-                          className={`text-xs capitalize mt-0.5 ${
-                            PAYMENT_STATUS_STYLE[order.payment?.status] || "text-gray-400"
-                          }`}
-                        >
-                          {order.payment?.status || "—"}
-                        </p>
-                      </div>
-
-                      {idx === (order.items?.length || 1) - 1 && (
-                        <>
-                          <div className="flex flex-col gap-1">
-                            <div className="relative inline-block w-fit">
-                              <select
-                                value={order.orderStatus}
-                                disabled={isCancelled || isBusy}
-                                onChange={(e) => handleStatusChange(order.orderId, e.target.value)}
-                                className={`
-                                  pl-3 pr-7 py-1 rounded-full text-xs font-medium border
-                                  appearance-none cursor-pointer capitalize
-                                  focus:outline-none disabled:opacity-60 disabled:cursor-not-allowed
-                                  ${STATUS_STYLE[order.orderStatus] || "bg-gray-100 text-gray-600"}
-                                `}
-                              >
-                                {ORDER_STATUSES.map((s) => (
-                                  <option key={s} value={s}>
-                                    {STATUS_LABEL[s]}
-                                  </option>
-                                ))}
-                              </select>
-                              <ChevronDown
-                                size={12}
-                                className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none"
-                              />
-                            </div>
-                            <p className="text-xs text-gray-400">
-                              Total: {fmt.currency(order.totalAmount)}
-                            </p>
-                            {order.cancelReason && (
-                              <p
-                                className="text-xs text-red-400 max-w-[160px] truncate"
-                                title={order.cancelReason}
-                              >
-                                ✕ {order.cancelReason}
-                              </p>
-                            )}
-                          </div>
-
-                          <div className="flex flex-col gap-2">
-                            {!isCancelled && !isDelivered && (
-                              <button
-                                onClick={() => setCancelTarget(order.orderId)}
-                                className="border border-red-300 text-red-600 px-3 py-1.5 rounded-md text-xs hover:bg-red-50"
-                              >
-                                Cancel Order
-                              </button>
-                            )}
-                          </div>
-                        </>
-                      )}
                     </div>
                   ))}
 
@@ -495,9 +529,8 @@ export default function OrderList() {
                     {fmt.payment(openOrder.payment?.method)}
                   </p>
                   <p
-                    className={`text-xs capitalize mt-0.5 ${
-                      PAYMENT_STATUS_STYLE[openOrder.payment?.status] || "text-gray-400"
-                    }`}
+                    className={`text-xs capitalize mt-0.5 ${PAYMENT_STATUS_STYLE[openOrder.payment?.status] || "text-gray-400"
+                      }`}
                   >
                     {openOrder.payment?.status || "—"}
                   </p>
@@ -519,9 +552,8 @@ export default function OrderList() {
 
               <div className="flex items-center gap-3 flex-wrap">
                 <span
-                  className={`px-3 py-1 rounded-full text-xs font-semibold capitalize ${
-                    STATUS_STYLE[openOrder.orderStatus] || "bg-gray-100 text-gray-600"
-                  }`}
+                  className={`px-3 py-1 rounded-full text-xs font-semibold capitalize ${STATUS_STYLE[openOrder.orderStatus] || "bg-gray-100 text-gray-600"
+                    }`}
                 >
                   {STATUS_LABEL[openOrder.orderStatus] || openOrder.orderStatus}
                 </span>
