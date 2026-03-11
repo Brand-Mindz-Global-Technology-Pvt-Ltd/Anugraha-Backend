@@ -1,4 +1,7 @@
 
+
+
+
 import {
   Search,
   Download,
@@ -20,7 +23,6 @@ const getStockStatus = (stock) => {
   return "High";
 };
 
-/* -------------------- TABLE SKELETON -------------------- */
 
 const TableSkeleton = ({ rows = 5 }) => {
   return Array.from({ length: rows }).map((_, i) => (
@@ -71,7 +73,7 @@ export default function Inventory() {
   } = useInventory();
 
   return (
-    <div className="p-6 bg-slate-50 min-h-screen">
+    <div className="p-2 bg-slate-50 min-h-screen">
       {/* HEADER */}
       <div className="bg-white rounded-2xl p-6 shadow-sm mb-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -153,76 +155,79 @@ export default function Inventory() {
 
       {/* TABLE */}
       <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-        <table className="w-full text-sm">
-          <thead className="bg-slate-100 text-slate-600">
-            <tr>
-              <th className="p-4 text-left">Product</th>
-              <th className="p-4 text-center">Category</th>
-              <th className="p-4 text-center">Sub Category</th>
-              <th className="p-4 text-center">Stock</th>
-              <th className="p-4 text-center">Status</th>
-            </tr>
-          </thead>
-
-          <tbody className="divide-y">
-            {loading ? (
-              <TableSkeleton rows={5} />
-            ) : data.length === 0 ? (
+        {/* overflow-x-auto enables horizontal scroll on small screens */}
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[600px] text-sm">
+            <thead className="bg-slate-100 text-slate-600">
               <tr>
-                <td
-                  colSpan="5"
-                  className="text-center py-10 text-slate-400"
-                >
-                  No products found
-                </td>
+                <th className="p-4 text-left">Product</th>
+                <th className="p-4 text-center">Category</th>
+                <th className="p-4 text-center">Sub Category</th>
+                <th className="p-4 text-center">Stock</th>
+                <th className="p-4 text-center">Status</th>
               </tr>
-            ) : (
-              data.map((item) => {
-                const status = getStockStatus(item.stock);
+            </thead>
 
-                return (
-                  <tr
-                    key={item._id}
-                    className="hover:bg-slate-50"
+            <tbody className="divide-y">
+              {loading ? (
+                <TableSkeleton rows={5} />
+              ) : data.length === 0 ? (
+                <tr>
+                  <td
+                    colSpan="5"
+                    className="text-center py-10 text-slate-400"
                   >
-                    <td className="p-4">
-                      <div className="font-medium text-slate-900">
-                        {item.name.slice(0, 20)}{item.name.length > 20 ? "..." : ""}
-                      </div>
-                      <div className="text-xs text-slate-400">
-                        {item.productId}
-                      </div>
-                    </td>
+                    No products found
+                  </td>
+                </tr>
+              ) : (
+                data.map((item) => {
+                  const status = getStockStatus(item.stock);
 
-                    <td className="p-4 text-center">
-                      <span className="px-2 py-1 rounded-md bg-slate-100 text-slate-600 text-xs">
-                        {item.category}
-                      </span>
-                    </td>
+                  return (
+                    <tr
+                      key={item._id}
+                      className="hover:bg-slate-50"
+                    >
+                      <td className="p-4">
+                        <div className="font-medium text-slate-900">
+                          {item.name.slice(0, 20)}{item.name.length > 20 ? "..." : ""}
+                        </div>
+                        <div className="text-xs text-slate-400">
+                          {item.productId}
+                        </div>
+                      </td>
 
-                    <td className="p-4 text-center">
-                      <span className="px-2 py-1 rounded-md bg-slate-100 text-slate-600 text-xs">
-                        {item.subCategory}
-                      </span>
-                    </td>
+                      <td className="p-4 text-center">
+                        <span className="px-2 py-1 rounded-md bg-slate-100 text-slate-600 text-xs">
+                          {item.category}
+                        </span>
+                      </td>
 
-                    <td className="p-4 text-center font-medium">
-                      {item.stock}
-                    </td>
+                      <td className="p-4 text-center">
+                        <span className="px-2 py-1 rounded-md bg-slate-100 text-slate-600 text-xs">
+                          {item.subCategory}
+                        </span>
+                      </td>
 
-                    <td className="p-4 text-center">
-                      <span
-                        className={`px-3 py-1 rounded-full text-xs font-semibold ${statusStyle[status]}`}
-                      >
-                        {status}
-                      </span>
-                    </td>
-                  </tr>
-                );
-              })
-            )}
-          </tbody>
-        </table>
+                      <td className="p-4 text-center font-medium">
+                        {item.stock}
+                      </td>
+
+                      <td className="p-4 text-center">
+                        <span
+                          className={`px-3 py-1 rounded-full text-xs font-semibold ${statusStyle[status]}`}
+                        >
+                          {status}
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
 
         {/* PAGINATION */}
         <div className="flex justify-between items-center p-4 bg-slate-50 text-sm">
