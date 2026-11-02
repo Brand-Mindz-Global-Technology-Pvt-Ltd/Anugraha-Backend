@@ -1,18 +1,17 @@
 import Product from "../Models/Product.js";
 import Category from "../Models/Category.js";
-import { DeleteObjectCommand } from "@aws-sdk/client-s3";
-import s3 from "../Config/s3.js";
-import { ENV } from "../Config/env.js";
+import fs from "fs";
+import path from "path";
 
 
 const generateSlug = (name) => {
     const base = name
         .toLowerCase()
         .trim()
-        .replace(/[^a-z0-9]+/g, "-")    
+        .replace(/[^a-z0-9]+/g, "-")
         .replace(/(^-|-$)/g, "");
 
-    return `${base}-${Math.floor(1000 + Math.random() * 9000)}`; 
+    return `${base}-${Math.floor(1000 + Math.random() * 9000)}`;
 };
 
 export const createProduct = async (req, res) => {
@@ -58,7 +57,9 @@ export const createProduct = async (req, res) => {
             return res.status(400).json({ message: "At least one image is required" });
         }
 
-        const images = req.files.map((file) => file.location);
+        const images = req.files.map(
+            (file) => `/uploads/product/${file.filename}`
+        );
 
         /* ---------- SAFE PARSING ---------- */
         let parsedRams = [];
@@ -134,7 +135,7 @@ export const getCategories = async (req, res) => {
         res.json({
             success: true,
             data: categories,
-            productId: nextProductId, 
+            productId: nextProductId,
         });
     } catch (err) {
         console.error(err);
@@ -302,19 +303,22 @@ export const updateProduct = async (req, res) => {
 
         for (const imageUrl of removedImages) {
             try {
-                const key = decodeURIComponent(
-                    new URL(imageUrl).pathname.substring(1)
-                );
+                if (imageUrl?.startsWith("/uploads/product/")) {
+                    const filePath = path.join(
+                        process.cwd(),
+                        imageUrl.replace(/^\//, "")
+                    );
 
-                await s3.send(
-                    new DeleteObjectCommand({
-                        Bucket: ENV.AWS_BUCKET_NAME,
-                        Key: key,
-                    })
-                );
-                console.log('Delete successfully')
+                    if (fs.existsSync(filePath)) {
+                        fs.unlinkSync(filePath);
+                    }
+                }
             } catch (err) {
-                console.error("S3 delete failed:", imageUrl, err.message);
+                console.error(
+                    "Local image delete failed:",
+                    imageUrl,
+                    err.message
+                );
             }
         }
 
@@ -323,7 +327,9 @@ export const updateProduct = async (req, res) => {
         let newImages = [];
 
         if (req.files && req.files.length > 0) {
-            newImages = req.files.map((file) => file.location);
+            newImages = req.files.map(
+                (file) => `/uploads/product/${file.filename}`
+            );
         }
 
         /* ---------- SAFE PARSING ---------- */
@@ -383,71 +389,71 @@ export const updateProduct = async (req, res) => {
 };
 
 export const bulkUploadProducts = async (req, res) => {
-  try {
-    const { products } = req.body;
+    try {
+        const { products } = req.body;
 
-    if (!products || !Array.isArray(products) || products.length === 0) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid products data",
-      });
+        if (!products || !Array.isArray(products) || products.length === 0) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid products data",
+            });
+        }
+
+        const adminId = req.user?.id;
+
+        if (!adminId) {
+            return res.status(401).json({
+                success: false,
+                message: "Unauthorized",
+            });
+        }
+
+        const lastProduct = await Product.findOne({})
+            .sort({ productId: -1 })
+            .select("productId");
+
+        let lastNumber = 0;
+
+        if (lastProduct?.productId) {
+            const match = lastProduct.productId.match(/\d+/);
+            if (match) {
+                lastNumber = parseInt(match[0], 10);
+            }
+        }
+
+        const formattedProducts = products.map((item, index) => {
+            const newNumber = lastNumber + index + 1;
+
+            return {
+                name: item.name?.trim(),
+                slug: generateSlug(item.name),
+                productId: `PRD${String(newNumber).padStart(5, "0")}`,
+                description: item.description || "",
+                price: Number(item.price),
+                oldPrice: Number(item.oldPrice) || 0,
+                stock: Number(item.stock),
+                brand: item.brand,
+                category: item.category,
+                subCategory: item.subCategory || "",
+                adminId: adminId,
+            };
+        });
+
+        const insertedProducts = await Product.insertMany(formattedProducts);
+
+        return res.status(201).json({
+            success: true,
+            insertedCount: insertedProducts.length,
+        });
+
+    } catch (error) {
+        console.error("Bulk Upload Error:", error);
+
+        return res.status(500).json({
+            success: false,
+            message: error.message, // show real error for debugging
+        });
     }
-
-    const adminId = req.user?.id; 
-
-    if (!adminId) {
-      return res.status(401).json({
-        success: false,
-        message: "Unauthorized",
-      });
-    }
-
-    const lastProduct = await Product.findOne({})
-      .sort({ productId: -1 })
-      .select("productId");
-
-    let lastNumber = 0;
-
-    if (lastProduct?.productId) {
-      const match = lastProduct.productId.match(/\d+/);
-      if (match) {
-        lastNumber = parseInt(match[0], 10);
-      }
-    }
-
-    const formattedProducts = products.map((item, index) => {
-      const newNumber = lastNumber + index + 1;
-
-      return {
-        name: item.name?.trim(),
-        slug: generateSlug(item.name),
-        productId: `PRD${String(newNumber).padStart(5, "0")}`,
-        description: item.description || "",
-        price: Number(item.price),
-        oldPrice: Number(item.oldPrice) || 0,
-        stock: Number(item.stock),
-        brand: item.brand,
-        category: item.category,
-        subCategory: item.subCategory || "",
-        adminId: adminId,   
-      };
-    });
-
-    const insertedProducts = await Product.insertMany(formattedProducts);
-
-    return res.status(201).json({
-      success: true,
-      insertedCount: insertedProducts.length,
-    });
-
-  } catch (error) {
-    console.error("Bulk Upload Error:", error);
-
-    return res.status(500).json({
-      success: false,
-      message: error.message, // show real error for debugging
-    });
-  }
 };
 
 

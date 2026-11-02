@@ -6,7 +6,6 @@ import {
   Search,
   Bell,
   ChevronDown,
-  Languages,
   Menu,
   LogOut,
   User,
@@ -172,11 +171,14 @@ export default function Topbar({ onMenu }) {
   const profileImage =
     profile?.profileImage?.url || DEFAULT_AVATAR;
 
+  const displayRole =
+    role === "SUPER_ADMIN" ? "Anugraha Admin" : (role ? role.replace(/_/g, " ") : "Anugraha Admin");
+
   return (
     <>
-      <header className="h-16 bg-white border-b border-slate-200 rounded-lg flex items-center px-2 sticky top-0 z-30">
+      <header className="h-16 bg-white border-b border-slate-200 rounded-lg flex items-center justify-between px-4 sm:px-6 sticky top-0 z-30 shadow-sm">
         {/* ===== Left ===== */}
-        <div className="flex items-center gap-2 min-w-0 p-4">
+        <div className="flex items-center gap-3 min-w-0">
           {onMenu && (
             <button
               onClick={onMenu}
@@ -206,10 +208,10 @@ export default function Topbar({ onMenu }) {
         </div>
 
         {/* ===== Center Search (Desktop) ===== */}
-        <div className="hidden md:flex flex-1 justify-center p-4" ref={searchRef}>
+        <div className="hidden md:flex flex-1 justify-center px-4 max-w-md mx-auto" ref={searchRef}>
           <div className="relative w-full max-w-md">
-            <div className="flex items-center w-full bg-blue-50 rounded-full px-4 py-1.5 border border-transparent focus-within:border-blue-600 transition-colors">
-              <span className="flex items-center justify-center mr-2 p-2 rounded-full bg-blue-600 text-white">
+            <div className="flex items-center w-full bg-slate-50 rounded-full px-4 py-1.5 border border-slate-200 focus-within:border-[#d4a13f] focus-within:bg-white transition-colors">
+              <span className="flex items-center justify-center mr-2 p-1.5 rounded-full bg-[#d4a13f] text-slate-950">
                 <Search size={14} />
               </span>
               <input
@@ -241,7 +243,7 @@ export default function Topbar({ onMenu }) {
         </div>
 
         {/* ===== Right ===== */}
-        <div className="flex items-center gap-4 min-w-0 justify-end p-4">
+        <div className="flex items-center gap-3 min-w-0 justify-end">
           <button
             onClick={() => setOpenSearch(true)}
             className="md:hidden h-9 w-9 flex items-center justify-center rounded-full  hover:bg-slate-100"
@@ -249,40 +251,28 @@ export default function Topbar({ onMenu }) {
             <Search size={18} />
           </button>
 
-          <button
-            className="
-    hidden sm:flex items-center gap-2
-    px-3 py-1.5
-    text-sm font-medium text-slate-700
-    bg-slate-200 rounded-full
-    hover:bg-slate-300
-    transition-colors duration-200
-  "
-          >
-            <span className="flex items-center justify-center p-1.5 rounded-full bg-blue-600 text-white">
-              <Languages size={16} />
-            </span>
-
-            <span>Eng (US)</span>
-          </button>
+          
           {/* ===== Profile Dropdown ===== */}
           <div className="relative" ref={profileRef}>
             <div
               onClick={() => setOpenProfile(p => !p)}
-              className="flex items-center gap-2 cursor-pointer rounded-lg p-1 hover:bg-slate-100 select-none"
+              className="flex items-center gap-2.5 cursor-pointer rounded-lg p-1.5 hover:bg-slate-100 select-none transition-colors"
             >
               <img
                 src={profileImage}
                 alt="Admin"
-                className="h-9 w-9 rounded-lg object-cover"
+                className="h-9 w-9 rounded-lg object-cover ring-1 ring-slate-200"
+                onError={(e) => {
+                  e.currentTarget.src = DEFAULT_AVATAR;
+                }}
               />
 
-              <div className="hidden md:block leading-tight">
-                <p className="text-sm font-medium text-slate-800">
+              <div className="hidden md:block leading-tight text-left">
+                <p className="text-sm font-semibold text-slate-800">
                   {loading ? "Loading..." : username?.slice(0, 20) || ""}
                 </p>
-                <p className="text-xs text-slate-500">
-                  {role || "Admin"}
+                <p className="text-xs text-slate-500 font-medium">
+                  {displayRole}
                 </p>
               </div>
 

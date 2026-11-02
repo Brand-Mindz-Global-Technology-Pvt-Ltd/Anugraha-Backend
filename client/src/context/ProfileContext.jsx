@@ -1,6 +1,32 @@
 import { createContext, useContext, useState, useEffect, useCallback } from "react";
 import { profileAPI } from "../api/profileapi.js";
 
+const SERVER_ORIGIN = import.meta.env.VITE_API_URL
+  ? new URL(import.meta.env.VITE_API_URL).origin
+  : "";
+
+/**
+ * Ensure relative image URLs are absolute so <img> resolves against the
+ * API server origin (e.g. http://localhost:5000), not the frontend dev
+ * server (e.g. http://localhost:5173).
+ * Also appends a cache-bust timestamp so the browser fetches the new image
+ * instead of showing the old cached version.
+ */
+function normalizeProfile(profile, bustCache = false) {
+  if (!profile) return {};
+  const img = profile.profileImage;
+  if (img?.url && img.url.startsWith("/")) {
+    const cacheSuffix = bustCache ? `?t=${Date.now()}` : "";
+    return {
+      ...profile,
+      profileImage: {
+        ...img,
+        url: `${SERVER_ORIGIN}${img.url}${cacheSuffix}`,
+      },
+    };
+  }
+  return profile;
+}
 
 const ProfileContext = createContext(null);
 export const useProfile = () => {
@@ -35,7 +61,7 @@ export const ProfileProvider = ({ children }) => {
             setLoading(true);
             setError(null);
             const data = await profileAPI.getProfile(adminId);
-            setProfile(data.profile || {});
+            setProfile(normalizeProfile(data.profile || {}));
             setEmail(data.email || "");
             setrole(data.role || "")
             setusername(data.profile?.firstName + " " + data.profile?.lastName || "")
@@ -56,8 +82,9 @@ export const ProfileProvider = ({ children }) => {
             setLoading(true);
             setError(null);
             const data = await profileAPI.updateProfile(adminId, formData);
-            setProfile(data.profile || {});
-            setEmail(data.email || "");
+            // Normalize image URL and bust cache so browser fetches the new image
+            setProfile(normalizeProfile(data.profile || {}, true));
+            setEmail(data.email || email);
             return { success: true, data };
         } catch (err) {
             const errorMsg = err.response?.data?.message || "Failed to update profile";

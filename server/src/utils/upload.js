@@ -1,25 +1,24 @@
 
 import multer from "multer";
-import multerS3 from "multer-s3";
-import { S3Client } from "@aws-sdk/client-s3";
-import { ENV } from "../Config/env.js";
+import path from "path";
+import fs from "fs";
 
-const s3 = new S3Client({
-  region: ENV.AWS_REGION,
-  credentials: {
-    accessKeyId: ENV.AWS_ACCESS_KEY,
-    secretAccessKey: ENV.AWS_SECRET_KEY,
-  },
-});
+const upload = (folderName) => {
+  const uploadDir = path.join(
+    process.cwd(),
+    "uploads",
+    folderName
+  );
 
-const upload = (folderName) =>
-  multer({
-    storage: multerS3({
-      s3,
-      bucket: ENV.AWS_BUCKET_NAME,
-      contentType: multerS3.AUTO_CONTENT_TYPE,
-      key: (req, file, cb) => {
-        const fileName = `${folderName}/${Date.now()}-${file.originalname}`;
+  fs.mkdirSync(uploadDir, { recursive: true });
+
+  return multer({
+    storage: multer.diskStorage({
+      destination: (req, file, cb) => {
+        cb(null, uploadDir);
+      },
+      filename: (req, file, cb) => {
+        const fileName = `${Date.now()}-${file.originalname}`;
         cb(null, fileName);
       },
     }),
@@ -30,35 +29,9 @@ const upload = (folderName) =>
       cb(null, true);
     },
     limits: {
-      fileSize: 5 * 1024 * 1024, // 5MB
+      fileSize: 5 * 1024 * 1024,
     },
   });
+};
 
 export default upload;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

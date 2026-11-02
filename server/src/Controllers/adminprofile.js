@@ -1,8 +1,7 @@
 import bcrypt from "bcryptjs";
+import fs from "fs";
+import path from "path";
 import Admin from "../Models/admin.js";
-import s3 from "../Config/s3.js";
-import { DeleteObjectCommand, HeadObjectCommand } from "@aws-sdk/client-s3";
-import { ENV } from "../Config/env.js";
 
 export const changeAdminPassword = async (req, res) => {
   try {
@@ -75,6 +74,14 @@ export const updateAdminProfile = async (req, res) => {
   try {
     const { adminId } = req.params;
 
+    /* ---------- GUARD: no data provided ---------- */
+    if (!req.body && !req.file) {
+      return res.status(400).json({
+        success: false,
+        message: "No update data provided",
+      });
+    }
+
     /* ---------- FIND ADMIN ---------- */
     const admin = await Admin.findById(adminId);
     if (!admin) {
@@ -88,52 +95,27 @@ export const updateAdminProfile = async (req, res) => {
 
     /* ---------- PROFILE TEXT ---------- */
     ["firstName", "lastName", "phone"].forEach((field) => {
-      if (req.body[field]) {
+      if (req.body && req.body[field] !== undefined) {
         update[`profile.${field}`] = req.body[field];
       }
     });
 
-    /* ---------- SOCIAL LINKS ---------- */
-    [
-      "facebook",
-      "instagram",
-      "linkedin",
-      "twitter",
-      "github",
-      "website",
-    ].forEach((field) => {
-      if (req.body[field]) {
-        update[`profile.socialLinks.${field}`] = req.body[field];
-      }
-    });
-
-    /* ---------- PROFILE IMAGE ---------- */
+    /* ---------- PROFILE IMAGE (local disk storage) ---------- */
     if (req.file) {
+      // Delete old image from disk if one existed
       const oldKey = admin.profile?.profileImage?.key;
-
       if (oldKey) {
+        const oldFilePath = path.join(process.cwd(), "uploads", oldKey);
         try {
-          await s3.send(
-            new HeadObjectCommand({
-              Bucket: ENV.AWS_BUCKET_NAME,
-              Key: oldKey,
-            })
-          );
-
-          await s3.send(
-            new DeleteObjectCommand({
-              Bucket: ENV.AWS_BUCKET_NAME,
-              Key: oldKey,
-            })
-          );
+          fs.unlinkSync(oldFilePath);
         } catch (err) {
-          console.warn("Old image not found or already deleted:", oldKey);
+          console.warn("Old profile image not found on disk, skipping delete:", oldKey);
         }
       }
 
       update["profile.profileImage"] = {
-        key: req.file.key,
-        url: req.file.location,
+        key: `profile/${req.file.filename}`,
+        url: `/uploads/profile/${req.file.filename}`,
       };
     }
 

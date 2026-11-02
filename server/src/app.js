@@ -14,12 +14,14 @@ import sliderRoutes from "./Routes/sliderroutes.js";
 import bannerRoutes from "./Routes/bannerroutes.js";
 import inventoryRoutes from "./Routes/inventoryroutes.js";
 import productRoutes from "./Routes/productroutes.js";
-import adminorderRoutes from "./Routes/adminorderroutes.js"; 
-import dashboardRoutes from "./Routes/dashboardroutes.js"; 
+import adminorderRoutes from "./Routes/adminorderroutes.js";
+import supplierRoutes from "./Routes/supplierroutes.js";
+import offlineOrderRoutes from "./Routes/offlineorderroutes.js";
+import dashboardRoutes from "./Routes/dashboardroutes.js";
 
 // customer routes
 import wishlistRoutes from "./Routes/customer/wishlistroutes.js";
-import cartRoutes from  "./Routes/customer/cartroutes.js";
+import cartRoutes from "./Routes/customer/cartroutes.js";
 import addressRoutes from "./Routes/customer/addressroutes.js";
 import orderRoutes from "./Routes/customer/orderroutes.js";
 import settingRoutes from "./Routes/settingroutes.js";
@@ -36,9 +38,9 @@ const __dirname = path.dirname(__filename);
 app.set("trust proxy", 1);
 
 const allowedOrigins = [
-  "http://localhost:5173",        
-  "http://localhost:5174",       
- ,
+  "http://localhost:5173",
+  "http://localhost:5174",
+  ,
 ];
 
 app.use(
@@ -57,7 +59,13 @@ app.use(
 );
 
 // --- security & logging ---
-app.use(helmet());
+app.use(
+  helmet({
+    crossOriginResourcePolicy: {
+      policy: "cross-origin",
+    },
+  })
+);
 app.use(morgan("dev"));
 
 // --- body parsing ---
@@ -66,18 +74,21 @@ app.use(express.urlencoded({ extended: true }));
 
 // --- static files ---
 app.use(express.static(path.join(__dirname, "public")));
-
+app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 // ================= ADMIN ROUTES =================
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/admin", adminprofileRoutes);
 app.use("/api/v1/category", categoryRoutes);
 app.use("/api/v1/slider", sliderRoutes);
 app.use("/api/v1/banner", bannerRoutes);
+app.use("/api/v1/suppliers", supplierRoutes);
 app.use("/api/v1/inventory", inventoryRoutes);
 app.use("/api/v1/customers", customerRoutes);
 app.use("/api/v1/products", productRoutes);
-app.use("/api/v1/admin/orders", adminorderRoutes); 
-app.use("/api/v1/dashboard", dashboardRoutes); 
+app.use("/api/v1/admin/orders", adminorderRoutes);
+app.use("/api/v1/offline-orders", offlineOrderRoutes);
+app.use("/api/v1/dashboard", dashboardRoutes);
+
 app.use("/api/v1/settings", settingRoutes);
 // ================= CUSTOMER ROUTES =================
 app.use("/api/v1/customers/wishlist", wishlistRoutes);

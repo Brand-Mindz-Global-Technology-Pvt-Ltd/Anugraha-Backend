@@ -5,11 +5,11 @@ import { Formik, Form, Field, ErrorMessage } from "formik";
 import { Eye, EyeOff, AlertTriangle } from "lucide-react";
 import { resetPasswordSchema } from "../schema/authschema";
 import { useAuth } from "../context/Authcontext";
-import logo from "../assets/Imgaes/full.png";
+import logo from "../assets/Imgaes/Anugraha logo.png";
 
 const inputClass =
     "w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none " +
-    "focus:border-indigo-600 focus:ring-2 focus:ring-indigo-600/20";
+    "focus:border-[#d4a13f] focus:ring-2 focus:ring-[#d4a13f]/25";
 
 export default function ResetPassword() {
     const { token } = useParams();
@@ -42,11 +42,11 @@ export default function ResetPassword() {
     return (
         <div className="min-h-screen bg-slate-100">
             {/* TOP BAR */}
-            <header className="bg-gradient-to-r from-indigo-900 to-indigo-800 flex items-center px-4 sm:px-6 h-12 sm:h-14 md:h-16">
+            <header className="bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 border-b border-[#d4a13f]/30 flex items-center px-4 sm:px-6 h-14 sm:h-16 md:h-18">
                 <img
                     src={logo}
-                    alt="Brand logo"
-                    className="h-16 sm:h-16 md:h-20 lg:h-24 w-auto object-contain"
+                    alt="Anugraha Fashions logo"
+                    className="h-12 sm:h-14 md:h-16 w-auto object-contain"
                     loading="lazy"
                 />
             </header>
@@ -57,8 +57,8 @@ export default function ResetPassword() {
                     <div className="text-center mb-6">
                         <img
                             src={logo}
-                            alt="Brand logo"
-                            className="mx-auto h-17 w-32 sm:w-40 md:w-48 object-contain"
+                            alt="Anugraha Fashions logo"
+                            className="mx-auto h-20 sm:h-24 w-auto max-w-[200px] object-contain"
                             loading="lazy"
                         />
                         <h1 className="mt-3 font-bold text-xl sm:text-2xl">
@@ -168,7 +168,7 @@ export default function ResetPassword() {
                                 <button
                                     type="submit"
                                     disabled={isSubmitting}
-                                    className="w-full rounded-full bg-indigo-600 hover:bg-indigo-700 py-2.5 text-white text-sm transition disabled:opacity-60"
+                                    className="w-full rounded-full bg-gradient-to-r from-[#c89040] via-[#d4a13f] to-[#c89040] hover:from-[#bd8334] hover:via-[#c89040] hover:to-[#bd8334] py-2.5 text-slate-950 text-sm font-semibold tracking-wide shadow-md shadow-[#d4a13f]/25 transition duration-200 disabled:opacity-60"
                                 >
                                     {isSubmitting ? "Updating..." : "Reset Password"}
                                 </button>

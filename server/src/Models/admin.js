@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 
 const adminSchema = new mongoose.Schema(
   {
-    username: { 
+    username: {
       type: String,
       required: true,
       trim: true,
@@ -35,18 +35,15 @@ const adminSchema = new mongoose.Schema(
       firstName: {
         type: String,
         trim: true,
-        minlength: 2,
         maxlength: 50,
         default: "",
       },
       lastName: {
         type: String,
         trim: true,
-        minlength: 2,
         maxlength: 50,
         default: "",
       },
-
       profileImage: {
         key: {
           type: String,

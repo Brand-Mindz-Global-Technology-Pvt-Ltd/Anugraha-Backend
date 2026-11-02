@@ -39,6 +39,19 @@ export default function ProductsPage() {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     }).format(value);
+  const getImageUrl = (image) => {
+    if (!image) return "";
+
+    if (
+      image.startsWith("http://") ||
+      image.startsWith("https://") ||
+      image.startsWith("blob:")
+    ) {
+      return image;
+    }
+
+    return `http://localhost:5000${image}`;
+  };
 
 
   useEffect(() => {
@@ -374,12 +387,14 @@ export default function ProductsPage() {
                   className="group relative rounded-2xl border bg-white shadow-sm
                  hover:shadow-lg transition-all duration-300 overflow-hidden cursor-pointer"
                 >
-                  <div className="relative h-44 sm:h-48 overflow-hidden bg-gray-50">
+                  <div className="relative h-48 w-full bg-white overflow-hidden rounded-t-2xl">
                     <img
-                      src={p.images?.[0]}
+                      src={getImageUrl(p.images?.[0])}
                       alt={p.name}
-                      className="w-full h-full object-cover transition-transform duration-300
-                     group-hover:scale-105"
+                      className="block w-full h-full object-contain"
+                      onError={(e) => {
+                        console.error("IMAGE LOAD ERROR:", e.currentTarget.src);
+                      }}
                     />
 
                     <div className="absolute top-3 right-3 flex flex-col gap-2
@@ -499,7 +514,7 @@ export default function ProductsPage() {
 
                     {/* MAIN IMAGE */}
                     <img
-                      src={activeImage}
+                      src={getImageUrl(activeImage)}
                       className="w-full h-64 object-contain rounded-lg"
                     />
 
@@ -508,7 +523,7 @@ export default function ProductsPage() {
                       {selectedProduct.images?.slice(0, 4).map((img, index) => (
                         <img
                           key={index}
-                          src={img}
+                          src={getImageUrl(img)}
                           onClick={() => setActiveImage(img)}
                           className={`w-16 h-16 object-cover rounded-lg cursor-pointer border
                     ${activeImage === img

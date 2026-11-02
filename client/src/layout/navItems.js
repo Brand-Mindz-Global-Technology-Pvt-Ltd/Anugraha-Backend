@@ -6,6 +6,8 @@ import {
   Package,
   Boxes,
   Settings2,
+  Store,
+  Truck,
 } from "lucide-react";
 
 export const navItems = [
@@ -27,8 +29,13 @@ export const navItems = [
     icon: ShoppingCart,
     to: "/admin/orders",
   },
+  {
+    label: "Offline Orders",
+    to: "/admin/offline-orders",
+    icon: Store,
+  },
   { label: "Inventory", to: "/admin/inventory", icon: Boxes },
-
+  { label: "Supplier", to: "/admin/supplier", icon: Truck },
   {
     label: "CMS",
     icon: LayoutGrid,

@@ -1,5 +1,3 @@
-
-
 import {
   Routes,
   Route,
@@ -19,6 +17,8 @@ const Inventory = lazy(() => import("../pages/admin/Inventory"));
 const HomeSlider = lazy(() => import("../pages/admin/cms/HomeSlider"));
 const Banners = lazy(() => import("../pages/admin/cms/Banners"));
 const Profile = lazy(() => import("../pages/admin/Profile/Profile"));
+const Supplier = lazy(() => import("../pages/admin/Supplier/Supplier.jsx"));
+const OfflineOrders = lazy(() => import("../pages/admin/offline-orders/OfflineOrders.jsx"));
 const Setting = lazy(() => import("../pages/admin/Settings/Setting"));
 const Category = lazy(() => import("../pages/admin/category/Categorypage.jsx"))
 
@@ -87,11 +87,13 @@ export default function AdminRoutes() {
           </OrderProvider>
 
         } />
+        <Route path="offline-orders" element={<OfflineOrders />} />
         <Route path="inventory" element={
           <InventoryProvider>
             <Inventory />
           </InventoryProvider>
         } />
+        <Route path="supplier" element={<Supplier />} />
         <Route path="cms/home-slider" element={
           <SliderProvider>
             <HomeSlider />

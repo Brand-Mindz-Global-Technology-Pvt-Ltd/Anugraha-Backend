@@ -3,7 +3,7 @@ import { NavLink, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { LogOut, X, ChevronDown, ChevronRight } from "lucide-react";
 import axios from "axios";
-import defaultLogo from "../assets/Imgaes/full.png";
+import defaultLogo from "../assets/Imgaes/Anugraha logo.png";
 import { navItems } from "./navItems";
 
 export default function Sidebar({ onClose, onLogout }) {
@@ -67,15 +67,15 @@ export default function Sidebar({ onClose, onLogout }) {
     <aside className="h-screen w-64 sm:w-72 lg:w-64 xl:w-72 bg-white border-r border-slate-200 flex flex-col">
 
       {/* ================= LOGO HEADER ================= */}
-      <header className="h-16 sm:h-18 lg:h-20 flex items-center justify-center relative border-b border-slate-200">
+      <header className="h-20 sm:h-22 lg:h-24 flex items-center justify-center relative border-b border-slate-200 px-4 overflow-hidden">
         {logoLoading ? (
-          <div className="h-16 sm:h-15 lg:h-16 w-40 bg-slate-200 animate-pulse rounded-md" />
+          <div className="h-16 w-44 bg-slate-200 animate-pulse rounded-md" />
         ) : (
-          <div className="h-16 flex items-center">
+          <div className="h-full w-full flex items-center justify-center py-1">
             <img
               src={logo || defaultLogo}
-              alt="Company Logo"
-              className="max-h-full w-auto object-contain"
+              alt="Anugraha Fashions"
+              className="h-20 sm:h-24 w-auto max-w-[210px] object-contain scale-125 transition-transform"
               onError={(e) => {
                 e.currentTarget.src = defaultLogo;
               }}

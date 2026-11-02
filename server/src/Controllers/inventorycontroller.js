@@ -1,6 +1,8 @@
 import Product from "../Models/Product.js";
 import Category from "../Models/Category.js";
 
+/* ================= GET INVENTORY ================= */
+
 export const getInventory = async (req, res) => {
   try {
     const {
@@ -12,39 +14,66 @@ export const getInventory = async (req, res) => {
       status,
     } = req.query;
 
-    let query = {};
+    const query = {};
+
     if (search) {
       query.$or = [
         { name: { $regex: search, $options: "i" } },
         { slug: { $regex: search, $options: "i" } },
       ];
     }
-    if (category) query.category = category;
-    if (subCategory) query.subCategory = subCategory;
-    if (status === "Low") query.stock = { $lte: 10 };
-    if (status === "Medium") query.stock = { $gt: 10, $lte: 100 };
-    if (status === "High") query.stock = { $gt: 100 };
+
+    if (category) {
+      query.category = category;
+    }
+
+    if (subCategory) {
+      query.subCategory = subCategory;
+    }
+
+    // Existing filter behavior preserved
+    if (status === "Low") {
+      query.stock = { $lte: 10 };
+    }
+
+    if (status === "Medium") {
+      query.stock = { $gt: 10, $lte: 100 };
+    }
+
+    if (status === "High") {
+      query.stock = { $gt: 100 };
+    }
+
+    const numericPage = Math.max(1, Number(page) || 1);
+    const numericLimit = Math.max(1, Number(limit) || 10);
 
     const data = await Product.find(query)
-      .limit(Number(limit))
-      .skip((Number(page) - 1) * Number(limit))
+      .limit(numericLimit)
+      .skip((numericPage - 1) * numericLimit)
       .sort({ createdAt: -1 });
 
     const totalProducts = await Product.countDocuments(query);
 
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       data,
       pagination: {
         totalProducts,
-        totalPages: Math.ceil(totalProducts / limit),
-        currentPage: Number(page),
+        totalPages: Math.ceil(totalProducts / numericLimit),
+        currentPage: numericPage,
       },
     });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    console.error("Get inventory error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: error.message || "Failed to fetch inventory",
+    });
   }
 };
+
+/* ================= GET ACTIVE CATEGORIES ================= */
 
 export const getActiveCategories = async (req, res) => {
   try {
@@ -62,6 +91,7 @@ export const getActiveCategories = async (req, res) => {
     });
   } catch (error) {
     console.error("Get categories error:", error);
+
     return res.status(500).json({
       success: false,
       message: "Failed to fetch categories",
@@ -69,13 +99,76 @@ export const getActiveCategories = async (req, res) => {
   }
 };
 
+/* ================= UPDATE STOCK ================= */
+
+export const updateStock = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { stock } = req.body;
+
+    const stockValue = Number(stock);
+
+    if (!Number.isInteger(stockValue) || stockValue < 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Stock must be a non-negative whole number",
+      });
+    }
+
+    const product = await Product.findByIdAndUpdate(
+      id,
+      {
+        $set: {
+          stock: stockValue,
+        },
+      },
+      {
+        new: true,
+        runValidators: true,
+      }
+    );
+
+    if (!product) {
+      return res.status(404).json({
+        success: false,
+        message: "Product not found",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Stock updated successfully",
+      data: product,
+    });
+  } catch (error) {
+    console.error("Update stock error:", error);
+
+    if (error.name === "CastError") {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid product ID",
+      });
+    }
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to update stock",
+    });
+  }
+};
+
+/* ================= EXPORT INVENTORY CSV ================= */
+
 export const exportInventoryCSV = async (req, res) => {
   try {
-    const { search = "", category = "", status = "" } = req.query;
+    const {
+      search = "",
+      category = "",
+      status = "",
+    } = req.query;
 
     const query = {};
 
-    // Search
     if (search) {
       query.$or = [
         { name: { $regex: search, $options: "i" } },
@@ -83,31 +176,71 @@ export const exportInventoryCSV = async (req, res) => {
       ];
     }
 
-    // Category
     if (category) {
       query.category = category;
     }
 
-    // Stock Status
-    if (status === "Low") query.stock = { $lt: 100 };
-    if (status === "Medium") query.stock = { $gte: 100, $lt: 200 };
-    if (status === "High") query.stock = { $gte: 200 };
+    // Existing export behavior preserved
+    if (status === "Low") {
+      query.stock = { $lt: 100 };
+    }
+
+    if (status === "Medium") {
+      query.stock = {
+        $gte: 100,
+        $lt: 200,
+      };
+    }
+
+    if (status === "High") {
+      query.stock = { $gte: 200 };
+    }
 
     const products = await Product.find(query)
-      .select("name category subCategory price stock")
+      .select(
+        "name productId category subCategory price stock"
+      )
       .lean();
 
-    // CSV Header
-    let csv = "Name,Category,SubCategory,Price,Stock,Status\n";
+    let csv =
+      "Name,SKU,Category,SubCategory,Price,Stock,Status\n";
 
-    products.forEach((p) => {
+    products.forEach((product) => {
       const stockStatus =
-        p.stock < 100 ? "Low" : p.stock < 200 ? "Medium" : "High";
+        product.stock < 100
+          ? "Low"
+          : product.stock < 200
+            ? "Medium"
+            : "High";
 
-      csv += `"${p.name}","${p.category}","${p.subCategory}",${p.price},${p.stock},"${stockStatus}"\n`;
+      const values = [
+        product.name || "",
+        product.productId || "",
+        product.category || "",
+        product.subCategory || "",
+        product.price ?? 0,
+        product.stock ?? 0,
+        stockStatus,
+      ];
+
+      csv +=
+        values
+          .map((value) => {
+            const text = String(value).replace(
+              /"/g,
+              '""'
+            );
+
+            return `"${text}"`;
+          })
+          .join(",") + "\n";
     });
 
-    res.setHeader("Content-Type", "text/csv");
+    res.setHeader(
+      "Content-Type",
+      "text/csv; charset=utf-8"
+    );
+
     res.setHeader(
       "Content-Disposition",
       "attachment; filename=inventory-export.csv"
@@ -116,10 +249,10 @@ export const exportInventoryCSV = async (req, res) => {
     return res.status(200).send(csv);
   } catch (error) {
     console.error("Export error:", error);
-    res.status(500).json({ success: false, message: "Export failed" });
+
+    return res.status(500).json({
+      success: false,
+      message: "Export failed",
+    });
   }
 };
-
-
-
-
