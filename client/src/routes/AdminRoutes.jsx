@@ -16,6 +16,7 @@ const OrderList = lazy(() => import("../pages/admin/orders/OrderList"));
 const Inventory = lazy(() => import("../pages/admin/Inventory"));
 const HomeSlider = lazy(() => import("../pages/admin/cms/HomeSlider"));
 const Banners = lazy(() => import("../pages/admin/cms/Banners"));
+const BlogManagement = lazy(() => import("../pages/admin/cms/BlogManagement"));
 const Profile = lazy(() => import("../pages/admin/Profile/Profile"));
 const Supplier = lazy(() => import("../pages/admin/Supplier/Supplier.jsx"));
 const OfflineOrders = lazy(() => import("../pages/admin/offline-orders/OfflineOrders.jsx"));
@@ -104,6 +105,7 @@ export default function AdminRoutes() {
             <Banners />
           </BannerProvider>
         } />
+        <Route path="cms/blogs" element={<BlogManagement />} />
         <Route path="profile" element={<Profile />} />
         <Route path="settings" element={<Setting />} />
         <Route path="*" element={<Navigate to="dashboard" replace />} />

@@ -35,6 +35,9 @@ const SkeletonRow = ({ opacity = 1 }) => (
       <Shimmer w="w-40" />
     </td>
     <td className="px-4 py-3">
+      <Shimmer w="w-28" />
+    </td>
+    <td className="px-4 py-3">
       <Shimmer w="w-16" h="h-5" rounded="rounded-full" />
     </td>
     <td className="px-4 py-3 flex justify-end">
@@ -353,6 +356,7 @@ export default function Customers() {
                   <SortableTh field="customerId" label="Customer ID" />
                   <SortableTh field="name" label="Name" />
                   <th className="px-4 py-3">Email</th>
+                  <th className="px-4 py-3">Phone</th>
                   <th className="px-4 py-3">Status</th>
                   <th className="px-4 py-3 text-right">Actions</th>
                 </tr>
@@ -378,6 +382,7 @@ export default function Customers() {
                         </td>
                         <td className="px-4 py-3 font-medium text-gray-900">{c.name}</td>
                         <td className="px-4 py-3 text-gray-600">{c.email}</td>
+                        <td className="px-4 py-3 text-gray-600">{c.phone}</td>
                         <td className="px-4 py-3">
                           <span
                             className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${statusBadge(
@@ -401,7 +406,7 @@ export default function Customers() {
                   : null}
                 {!loading && customers.length === 0 && (
                   <tr>
-                    <td colSpan={5} className="py-20 text-center text-gray-400">
+                    <td colSpan={6} className="py-20 text-center text-gray-400">
                       {committedSearch
                         ? `No customers found matching "${committedSearch}"`
                         : 'No customers found.'}
@@ -487,6 +492,10 @@ export default function Customers() {
                       <div className="text-sm text-gray-600 flex items-center mb-3">
                         <span className="text-xs text-gray-400 w-14 shrink-0">Email:</span>
                         <span className="truncate">{c.email}</span>
+                      </div>
+                      <div className="text-sm text-gray-600 flex items-center mb-3">
+                        <span className="text-xs text-gray-400 w-14 shrink-0">Phone:</span>
+                        <span className="truncate">{c.phone}</span>
                       </div>
                       <button
                         onClick={() => openEditDrawer(c)}

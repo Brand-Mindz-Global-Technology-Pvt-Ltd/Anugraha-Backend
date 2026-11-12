@@ -30,7 +30,11 @@ const customerSchema = new mongoose.Schema(
       minlength: 6,
       select: false,
     },
-
+phone: {
+  type: String,
+  trim: true,
+  default: "",
+},
     status: {
       type: String,
       enum: ["Active", "Inactive", "Blocked"],
@@ -48,6 +52,7 @@ const customerSchema = new mongoose.Schema(
 
 customerSchema.index({ name: 1 });
 customerSchema.index({ status: 1 });
-const Customer = mongoose.model("Customer", customerSchema);
+const Customer =
+  mongoose.models.Customer || mongoose.model("Customer", customerSchema);
 
 export default Customer;

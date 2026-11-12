@@ -42,6 +42,7 @@ export const navItems = [
     children: [
       { label: "Home Slider", to: "/admin/cms/home-slider" },
       { label: "Banners", to: "/admin/cms/banners" },
+      { label: "Blog Management", to: "/admin/cms/blogs" },
     ],
 
   },

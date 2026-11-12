@@ -1,4 +1,4 @@
-import Customer from "../../Models/Customer.js";
+import Customer from "../../Models/customer.js";
 import generateCustomerId from "../../utils/generateCustomerId.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
@@ -9,7 +9,7 @@ import { exportToCSV, exportToExcel } from "../../utils/customerExport.js";
 
 export const createCustomer = async (req, res) => {
   try {
-    const { name, email, password, confirmPassword } = req.body;
+    const { name, email, password, confirmPassword, phone } = req.body;
 
     if (!name || !email || !password || !confirmPassword) {
       return res.status(400).json({ message: "All fields are required" });
@@ -32,6 +32,7 @@ export const createCustomer = async (req, res) => {
       name,
       email,
       password: hashedPassword,
+      phone: phone?.trim() || "",
     });
 
     res.status(201).json({
@@ -47,18 +48,26 @@ export const createCustomer = async (req, res) => {
   }
 };
 
+
 export const loginCustomer = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { email, phone, password } = req.body;
+    const identifier = (email || phone || "").trim();
 
-    if (!email || !password) {
+    if (!identifier || !password) {
       return res.status(400).json({
         success: false,
-        message: "Email and password are required",
+        message: "Email or phone number and password are required",
       });
     }
 
-    const customer = await Customer.findOne({ email }).select("+password");
+    const isEmail = identifier.includes("@");
+
+    const customer = await Customer.findOne(
+      isEmail
+        ? { email: identifier.toLowerCase() }
+        : { phone: identifier }
+    ).select("+password");
 
     if (!customer) {
       return res.status(401).json({
@@ -75,6 +84,7 @@ export const loginCustomer = async (req, res) => {
     }
 
     const isMatch = await bcrypt.compare(password, customer.password);
+
     if (!isMatch) {
       return res.status(401).json({
         success: false,
@@ -99,6 +109,7 @@ export const loginCustomer = async (req, res) => {
         customerId: customer.customerId,
         name: customer.name,
         email: customer.email,
+        phone: customer.phone || "",
         token,
       },
     });
@@ -343,5 +354,98 @@ export const exportCustomers = async (req, res) => {
     });
   } catch (err) {
     res.status(500).json({ message: err.message });
+  }
+};
+// GET CUSTOMER PROFILE
+export const getCustomerProfile = async (req, res) => {
+  try {
+    const customer = await Customer.findById(req.user.id).select("-password");
+
+    if (!customer) {
+      return res.status(404).json({
+        success: false,
+        message: "Customer not found",
+      });
+    }
+
+    if (customer.status !== "Active") {
+      return res.status(403).json({
+        success: false,
+        message: "Account is not active",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Profile fetched successfully",
+      data: {
+        id: customer._id,
+        customerId: customer.customerId,
+        name: customer.name,
+        email: customer.email,
+        phone: customer.phone || "",
+      },
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+
+// UPDATE CUSTOMER PROFILE
+export const updateCustomerProfile = async (req, res) => {
+  try {
+    const { name, phone } = req.body;
+
+    if (!name || !name.trim()) {
+      return res.status(400).json({
+        success: false,
+        message: "Name is required",
+      });
+    }
+
+    const customer = await Customer.findById(req.user.id);
+
+    if (!customer) {
+      return res.status(404).json({
+        success: false,
+        message: "Customer not found",
+      });
+    }
+
+    if (customer.status !== "Active") {
+      return res.status(403).json({
+        success: false,
+        message: "Account is not active",
+      });
+    }
+
+    customer.name = name.trim();
+
+    if (phone !== undefined) {
+      customer.phone = phone.trim();
+    }
+
+    await customer.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Profile updated successfully",
+      data: {
+        id: customer._id,
+        customerId: customer.customerId,
+        name: customer.name,
+        email: customer.email,
+        phone: customer.phone || "",
+      },
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
   }
 };

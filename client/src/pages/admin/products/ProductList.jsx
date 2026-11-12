@@ -455,9 +455,9 @@ export default function ProductsPage() {
                         ₹ {formatPrice(p.price)}
                       </span>
 
-                      {p.oldPrice && (
+                      {Number.isFinite(Number(p.oldPrice)) && Number(p.oldPrice) > 0 && (
                         <span className="text-xs line-through text-gray-400">
-                          ₹ {formatPrice(p.oldPrice)}
+                          ₹ {formatPrice(Number(p.oldPrice))}
                         </span>
                       )}
                     </div>

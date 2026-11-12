@@ -1,10 +1,13 @@
 import express from "express";
+import customerAuthMiddleware from "../../Middlewares/auth/customerAuthMiddleware.js";
 import {
   createCustomer,
   getAllCustomers,
   loginCustomer,
   forgotPassword,
   resetPassword,
+  getCustomerProfile,
+  updateCustomerProfile,
   updateCustomerStatus,
   exportCustomers,
 } from "../../Controllers/customer/customercontroller.js";
@@ -30,5 +33,7 @@ router.get("/products", getPublicProducts);
 router.get("/products/:slug/:id", getPublicSingleProduct);
 router.get("/categories", getPublicCategoriesWithSubCategories);
 router.get('/products/search', searchProducts);
+router.get("/profile", customerAuthMiddleware, getCustomerProfile);
+router.put("/profile", customerAuthMiddleware, updateCustomerProfile);
 
 export default router;
