@@ -1,6 +1,6 @@
 import Order from "../Models/Order.js";
 import OfflineOrder from "../Models/OfflineOrder.js";
-import Customer from "../Models/Customer.js";
+import Customer from "../Models/customer.js";
 import Product from "../Models/Product.js";
 import { startOfDay, endOfDay } from "date-fns";
 
