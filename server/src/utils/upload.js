@@ -4,11 +4,10 @@ import path from "path";
 import fs from "fs";
 
 const upload = (folderName) => {
-  const uploadDir = path.join(
-    process.cwd(),
-    "uploads",
-    folderName
-  );
+  const uploadRoot =
+  process.env.UPLOAD_DIR || path.join(process.cwd(), "uploads");
+
+const uploadDir = path.join(uploadRoot, folderName);
 
   fs.mkdirSync(uploadDir, { recursive: true });
 

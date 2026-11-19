@@ -75,7 +75,10 @@ app.use(express.urlencoded({ extended: true }));
 
 // --- static files ---
 app.use(express.static(path.join(__dirname, "public")));
-app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
+const uploadRoot =
+  process.env.UPLOAD_DIR || path.join(process.cwd(), "uploads");
+
+app.use("/uploads", express.static(uploadRoot));
 // ================= ADMIN ROUTES =================
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/admin", adminprofileRoutes);
