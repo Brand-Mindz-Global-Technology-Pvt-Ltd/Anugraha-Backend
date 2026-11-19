@@ -1,4 +1,5 @@
 import Order from "../Models/Order.js";
+import OfflineOrder from "../Models/OfflineOrder.js";
 import Customer from "../Models/Customer.js";
 import Product from "../Models/Product.js";
 import { startOfDay, endOfDay } from "date-fns";
@@ -58,9 +59,266 @@ const last6Months = () =>
 const LOW_STOCK_LIMIT = 10;
 const HIGH_STOCK_LIMIT = 100;
 
+const ONLINE_SALES_FILTER = {
+  "payment.status": "captured",
+  orderStatus: { $ne: "cancelled" },
+};
+
+const OFFLINE_SALES_FILTER = {
+  status: "completed",
+};
+
+const formatDateInput = (date) =>
+  `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(
+    date.getDate(),
+  ).padStart(2, "0")}`;
+
+const parseDateInput = (value) => {
+  if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    return null;
+  }
+
+  const [year, month, day] = value.split("-").map(Number);
+  const date = new Date(year, month - 1, day);
+
+  if (
+    date.getFullYear() !== year ||
+    date.getMonth() !== month - 1 ||
+    date.getDate() !== day
+  ) {
+    return null;
+  }
+
+  return date;
+};
+
+const getSalesDateRange = (query, now = new Date()) => {
+  const period = query.period || "all";
+  const todayStart = new Date(
+    now.getFullYear(),
+    now.getMonth(),
+    now.getDate(),
+  );
+  let start;
+  let endExclusive;
+
+  if (period === "all") {
+    return { period, start: null, endExclusive: null, from: null, to: null };
+  }
+
+  if (period === "today") {
+    start = todayStart;
+    endExclusive = new Date(todayStart);
+    endExclusive.setDate(endExclusive.getDate() + 1);
+  } else if (period === "yesterday") {
+    endExclusive = todayStart;
+    start = new Date(todayStart);
+    start.setDate(start.getDate() - 1);
+  } else if (period === "thisMonth") {
+    start = new Date(now.getFullYear(), now.getMonth(), 1);
+    endExclusive = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+  } else if (period === "lastMonth") {
+    start = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    endExclusive = new Date(now.getFullYear(), now.getMonth(), 1);
+  } else if (period === "custom") {
+    start = parseDateInput(query.from);
+    const end = parseDateInput(query.to);
+
+    if (!start || !end || start > end) {
+      return {
+        error: "Custom date range requires valid from/to dates with from no later than to",
+      };
+    }
+
+    endExclusive = new Date(end);
+    endExclusive.setDate(endExclusive.getDate() + 1);
+  } else {
+    return { error: "Invalid sales report period" };
+  }
+
+  const lastIncludedDay = new Date(endExclusive);
+  lastIncludedDay.setDate(lastIncludedDay.getDate() - 1);
+
+  return {
+    period,
+    start,
+    endExclusive,
+    from: formatDateInput(start),
+    to: formatDateInput(lastIncludedDay),
+  };
+};
+
+const getCombinedSalesMetrics = async (dateRange, includeProfit = false) => {
+  const dateFilter = dateRange?.start
+    ? { createdAt: { $gte: dateRange.start, $lt: dateRange.endExclusive } }
+    : {};
+
+  const onlineGroup = {
+    _id: null,
+    sales: { $sum: "$totalAmount" },
+    orders: { $sum: 1 },
+  };
+  const offlineGroup = { ...onlineGroup };
+
+  if (includeProfit) {
+    const items = { $ifNull: ["$items", []] };
+    const invalidProfitItem = {
+      $map: {
+        input: items,
+        as: "item",
+        in: {
+          $or: [
+            { $not: [{ $isNumber: "$$item.price" }] },
+            { $not: [{ $isNumber: "$$item.costPriceSnapshot" }] },
+            { $not: [{ $isNumber: "$$item.qty" }] },
+            { $lt: ["$$item.price", 0] },
+            { $lt: ["$$item.costPriceSnapshot", 0] },
+            { $lte: ["$$item.qty", 0] },
+          ],
+        },
+      },
+    };
+    const unavailableProfitOrder = {
+      $or: [
+        { $eq: [{ $size: items }, 0] },
+        { $anyElementTrue: [invalidProfitItem] },
+      ],
+    };
+    const orderGrossProfit = {
+      $sum: {
+        $map: {
+          input: items,
+          as: "item",
+          in: {
+            $cond: [
+              {
+                $and: [
+                  { $isNumber: "$$item.price" },
+                  { $isNumber: "$$item.costPriceSnapshot" },
+                  { $isNumber: "$$item.qty" },
+                ],
+              },
+              {
+                $multiply: [
+                  {
+                    $subtract: [
+                      "$$item.price",
+                      "$$item.costPriceSnapshot",
+                    ],
+                  },
+                  "$$item.qty",
+                ],
+              },
+              0,
+            ],
+          },
+        },
+      },
+    };
+
+    onlineGroup.grossProfit = orderGrossProfit;
+    onlineGroup.unavailableProfitOrders = {
+      $sum: { $cond: [unavailableProfitOrder, 1, 0] },
+    };
+    offlineGroup.grossProfit = orderGrossProfit;
+    offlineGroup.unavailableProfitOrders = {
+      $sum: { $cond: [unavailableProfitOrder, 1, 0] },
+    };
+  }
+
+  const [onlineResults, offlineResults] = await Promise.all([
+    Order.aggregate([
+      { $match: { ...ONLINE_SALES_FILTER, ...dateFilter } },
+      { $group: onlineGroup },
+    ]),
+    OfflineOrder.aggregate([
+      { $match: { ...OFFLINE_SALES_FILTER, ...dateFilter } },
+      { $group: offlineGroup },
+    ]),
+  ]);
+
+  const online = onlineResults[0] || { sales: 0, orders: 0 };
+  const offline = offlineResults[0] || { sales: 0, orders: 0 };
+
+  const metrics = {
+    onlineSales: online.sales,
+    offlineSales: offline.sales,
+    totalSales: online.sales + offline.sales,
+    onlineOrders: online.orders,
+    offlineOrders: offline.orders,
+    totalOrders: online.orders + offline.orders,
+  };
+
+  if (includeProfit) {
+    const onlineUnavailable = online.unavailableProfitOrders || 0;
+    const offlineUnavailable = offline.unavailableProfitOrders || 0;
+
+    metrics.onlineGrossProfit =
+      onlineUnavailable === 0 ? online.grossProfit || 0 : null;
+    metrics.offlineGrossProfit =
+      offlineUnavailable === 0 ? offline.grossProfit || 0 : null;
+    metrics.totalGrossProfit =
+      onlineUnavailable === 0 && offlineUnavailable === 0
+        ? (online.grossProfit || 0) + (offline.grossProfit || 0)
+        : null;
+    metrics.onlineProfitUnavailableOrders = onlineUnavailable;
+    metrics.offlineProfitUnavailableOrders = offlineUnavailable;
+    metrics.totalProfitUnavailableOrders =
+      onlineUnavailable + offlineUnavailable;
+  }
+
+  return metrics;
+};
+
+const calculateOrderGrossProfit = (items) => {
+  if (!Array.isArray(items) || items.length === 0) {
+    return null;
+  }
+
+  let grossProfit = 0;
+  for (const item of items) {
+    if (
+      !Number.isFinite(item.price) ||
+      item.price < 0 ||
+      !Number.isFinite(item.costPriceSnapshot) ||
+      item.costPriceSnapshot < 0 ||
+      !Number.isFinite(item.qty) ||
+      item.qty <= 0
+    ) {
+      return null;
+    }
+
+    grossProfit += (item.price - item.costPriceSnapshot) * item.qty;
+  }
+
+  return Number.isFinite(grossProfit) ? grossProfit : null;
+};
+
 export const getSalesSummary = async (req, res) => {
   try {
     const now = new Date();
+    const reportRange = getSalesDateRange(req.query, now);
+
+    if (reportRange.error) {
+      return res.status(400).json({
+        success: false,
+        message: reportRange.error,
+      });
+    }
+
+    const includeReport = req.query.includeReport === "true";
+    const reportPageValue = Number(req.query.page);
+    const reportPage =
+      Number.isSafeInteger(reportPageValue) && reportPageValue > 0
+        ? reportPageValue
+        : 1;
+    const reportLimitValue = Number(req.query.limit);
+    const reportLimit =
+      Number.isSafeInteger(reportLimitValue) && reportLimitValue > 0
+        ? Math.min(reportLimitValue, 100)
+        : 10;
+    const reportSkip = (reportPage - 1) * reportLimit;
+    const reportFetchLimit = reportSkip + reportLimit;
 
     // ───── Date Ranges ─────
     const todayS = new Date(
@@ -140,93 +398,44 @@ export const getSalesSummary = async (req, res) => {
       59,
       999,
     );
-
-    const successStatuses = [
-      "captured",
-      "paid",
-      "success",
-      "completed",
-      "CAPTURED",
-      "PAID",
-      "SUCCESS",
-      "COMPLETED",
-    ];
+    const todayRange = {
+      start: todayS,
+      endExclusive: new Date(todayE.getTime() + 1),
+    };
+    const yestRange = {
+      start: yestS,
+      endExclusive: new Date(yestE.getTime() + 1),
+    };
+    const thisMonthRange = {
+      start: thisMonthS,
+      endExclusive: new Date(thisMonthE.getTime() + 1),
+    };
+    const lastMonthRange = {
+      start: lastMonthS,
+      endExclusive: new Date(lastMonthE.getTime() + 1),
+    };
 
     const [
-      allTimeSalesAgg,
-      allTimeOrders,
-      todaySalesAgg,
-      yestSalesAgg,
-      todayOrders,
-      yestOrders,
-      thisMonthSalesAgg,
-      lastMonthSalesAgg,
-      thisMonthOrders,
-      lastMonthOrders,
+      allTimeMetrics,
+      todayMetrics,
+      yestMetrics,
+      thisMonthMetrics,
+      lastMonthMetrics,
       todayCusts,
       yestCusts,
       totalCustomers,
       stockSummary,
       lowStockProducts,
       highStockProducts,
+      reportMetrics,
+      onlineReportOrders,
+      offlineReportOrders,
     ] = await Promise.all([
-      // ───── SALES ─────
-      Order.aggregate([
-        { $match: { "payment.status": { $in: successStatuses } } },
-        { $group: { _id: null, total: { $sum: "$totalAmount" } } },
-      ]),
-
-      Order.countDocuments(),
-
-      Order.aggregate([
-        {
-          $match: {
-            createdAt: { $gte: todayS, $lte: todayE },
-            "payment.status": { $in: successStatuses },
-          },
-        },
-        { $group: { _id: null, total: { $sum: "$totalAmount" } } },
-      ]),
-
-      Order.aggregate([
-        {
-          $match: {
-            createdAt: { $gte: yestS, $lte: yestE },
-            "payment.status": { $in: successStatuses },
-          },
-        },
-        { $group: { _id: null, total: { $sum: "$totalAmount" } } },
-      ]),
-
-      Order.countDocuments({ createdAt: { $gte: todayS, $lte: todayE } }),
-      Order.countDocuments({ createdAt: { $gte: yestS, $lte: yestE } }),
-
-      Order.aggregate([
-        {
-          $match: {
-            createdAt: { $gte: thisMonthS, $lte: thisMonthE },
-            "payment.status": { $in: successStatuses },
-          },
-        },
-        { $group: { _id: null, total: { $sum: "$totalAmount" } } },
-      ]),
-
-      Order.aggregate([
-        {
-          $match: {
-            createdAt: { $gte: lastMonthS, $lte: lastMonthE },
-            "payment.status": { $in: successStatuses },
-          },
-        },
-        { $group: { _id: null, total: { $sum: "$totalAmount" } } },
-      ]),
-
-      Order.countDocuments({
-        createdAt: { $gte: thisMonthS, $lte: thisMonthE },
-      }),
-      Order.countDocuments({
-        createdAt: { $gte: lastMonthS, $lte: lastMonthE },
-      }),
+      getCombinedSalesMetrics(null),
+      getCombinedSalesMetrics(todayRange),
+      getCombinedSalesMetrics(yestRange),
+      getCombinedSalesMetrics(thisMonthRange),
+      getCombinedSalesMetrics(lastMonthRange),
 
       // ───── CUSTOMERS ─────
       Customer.countDocuments({ createdAt: { $gte: todayS, $lte: todayE } }),
@@ -264,7 +473,81 @@ export const getSalesSummary = async (req, res) => {
         { $limit: 5 },
         { $project: { _id: 0, name: 1, stock: 1 } },
       ]),
+
+      includeReport
+        ? getCombinedSalesMetrics(reportRange, true)
+        : Promise.resolve(null),
+      includeReport
+        ? Order.find({
+            ...ONLINE_SALES_FILTER,
+            ...(reportRange.start
+              ? {
+                  createdAt: {
+                    $gte: reportRange.start,
+                    $lt: reportRange.endExclusive,
+                  },
+                }
+              : {}),
+          })
+            .select(
+              "orderId customerId items totalAmount payment.method payment.status orderStatus createdAt",
+            )
+            .populate("customerId", "name")
+            .sort({ createdAt: -1 })
+            .limit(reportFetchLimit)
+            .lean()
+        : Promise.resolve([]),
+      includeReport
+        ? OfflineOrder.find({
+            ...OFFLINE_SALES_FILTER,
+            ...(reportRange.start
+              ? {
+                  createdAt: {
+                    $gte: reportRange.start,
+                    $lt: reportRange.endExclusive,
+                  },
+                }
+              : {}),
+          })
+            .select(
+              "orderId customerName salesperson items totalAmount paymentMethod status createdAt",
+            )
+            .sort({ createdAt: -1 })
+            .limit(reportFetchLimit)
+            .lean()
+        : Promise.resolve([]),
     ]);
+
+    const reportOrders = [
+      ...onlineReportOrders.map((order) => ({
+        _id: String(order._id),
+        orderId: order.orderId,
+        orderType: "Online",
+        customerName: order.customerId?.name || "—",
+        salesperson: null,
+        createdAt: order.createdAt,
+        totalAmount: order.totalAmount,
+        paymentMethod: order.payment?.method || "—",
+        paymentStatus: order.payment?.status || "—",
+        status: order.orderStatus || "—",
+        grossProfit: calculateOrderGrossProfit(order.items),
+      })),
+      ...offlineReportOrders.map((order) => ({
+        _id: String(order._id),
+        orderId: order.orderId,
+        orderType: "Offline",
+        customerName: order.customerName || "Walk-in Customer",
+        salesperson: order.salesperson || "—",
+        createdAt: order.createdAt,
+        totalAmount: order.totalAmount,
+        paymentMethod: order.paymentMethod || "—",
+        paymentStatus: null,
+        status: order.status || "—",
+        grossProfit: calculateOrderGrossProfit(order.items),
+      })),
+    ]
+      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+      .slice(reportSkip, reportSkip + reportLimit);
 
     const stockData = stockSummary[0] || {
       lowStock: 0,
@@ -275,24 +558,56 @@ export const getSalesSummary = async (req, res) => {
     res.json({
       success: true,
       data: {
+        salesReport: includeReport
+          ? {
+              period: reportRange.period,
+              from: reportRange.from,
+              to: reportRange.to,
+              totalSales: reportMetrics.totalSales,
+              onlineSales: reportMetrics.onlineSales,
+              offlineSales: reportMetrics.offlineSales,
+              totalOrders: reportMetrics.totalOrders,
+              onlineOrdersCount: reportMetrics.onlineOrders,
+              offlineOrdersCount: reportMetrics.offlineOrders,
+              totalGrossProfit: reportMetrics.totalGrossProfit,
+              onlineGrossProfit: reportMetrics.onlineGrossProfit,
+              offlineGrossProfit: reportMetrics.offlineGrossProfit,
+              profitUnavailableOrders: {
+                total: reportMetrics.totalProfitUnavailableOrders,
+                online: reportMetrics.onlineProfitUnavailableOrders,
+                offline: reportMetrics.offlineProfitUnavailableOrders,
+              },
+              orders: reportOrders,
+              pagination: {
+                currentPage: reportPage,
+                limit: reportLimit,
+                totalOrders: reportMetrics.totalOrders,
+                totalPages: Math.ceil(reportMetrics.totalOrders / reportLimit),
+              },
+            }
+          : undefined,
         sales: {
-          total: allTimeSalesAgg[0]?.total ?? 0,
-          today: todaySalesAgg[0]?.total ?? 0,
-          yesterday: yestSalesAgg[0]?.total ?? 0,
-          thisMonth: thisMonthSalesAgg[0]?.total ?? 0,
-          lastMonth: lastMonthSalesAgg[0]?.total ?? 0,
+          total: allTimeMetrics.totalSales,
+          onlineTotal: allTimeMetrics.onlineSales,
+          offlineTotal: allTimeMetrics.offlineSales,
+          today: todayMetrics.totalSales,
+          yesterday: yestMetrics.totalSales,
+          thisMonth: thisMonthMetrics.totalSales,
+          lastMonth: lastMonthMetrics.totalSales,
           percentage: calcPct(
-            todaySalesAgg[0]?.total ?? 0,
-            yestSalesAgg[0]?.total ?? 0,
+            todayMetrics.totalSales,
+            yestMetrics.totalSales,
           ),
         },
         orders: {
-          total: allTimeOrders,
-          today: todayOrders,
-          yesterday: yestOrders,
-          thisMonth: thisMonthOrders,
-          lastMonth: lastMonthOrders,
-          percentage: calcPct(todayOrders, yestOrders),
+          total: allTimeMetrics.totalOrders,
+          onlineTotal: allTimeMetrics.onlineOrders,
+          offlineTotal: allTimeMetrics.offlineOrders,
+          today: todayMetrics.totalOrders,
+          yesterday: yestMetrics.totalOrders,
+          thisMonth: thisMonthMetrics.totalOrders,
+          lastMonth: lastMonthMetrics.totalOrders,
+          percentage: calcPct(todayMetrics.totalOrders, yestMetrics.totalOrders),
         },
         customers: {
           total: totalCustomers,

@@ -4,13 +4,26 @@ const paymentSchema = new mongoose.Schema(
   {
     method: {
       type: String,
-      enum: ["cod", "razorpay"],
+      enum: ["cod", "razorpay", "phonepe"],
       required: true,
     },
 
     razorpayOrderId: { type: String, default: null },
     razorpayPaymentId: { type: String, default: null },
     razorpaySignature: { type: String, default: null },
+
+    phonepeMerchantOrderId: { type: String, default: null },
+    phonepeOrderId: { type: String, default: null },
+    phonepeTransactionId: { type: String, default: null },
+    phonepeIdempotencyKey: { type: String, default: null },
+    phonepePurchaseKey: { type: String, default: null },
+    phonepeRedirectUrl: { type: String, default: null },
+    phonepeInitiationStatus: {
+      type: String,
+      enum: ["initiating", "ready", "unknown", "failed", null],
+      default: null,
+    },
+    phonepeInventoryDeducted: { type: Boolean, default: false },
 
     status: {
       type: String,
@@ -33,6 +46,7 @@ const orderItemSchema = new mongoose.Schema(
     },
     name: { type: String, required: true },
     price: { type: Number, required: true, min: 0 },
+    costPriceSnapshot: { type: Number, min: 0 },
     qty: { type: Number, required: true, min: 1 },
     color: { type: String, default: null },
     size: { type: String, default: null },
@@ -87,4 +101,25 @@ const orderSchema = new mongoose.Schema(
 );
 
 orderSchema.index({ customerId: 1, createdAt: -1 });
+orderSchema.index(
+  { customerId: 1, "payment.phonepeIdempotencyKey": 1 },
+  {
+    unique: true,
+    partialFilterExpression: {
+      "payment.method": "phonepe",
+      "payment.phonepeIdempotencyKey": { $type: "string" },
+    },
+  }
+);
+orderSchema.index(
+  { customerId: 1, "payment.phonepePurchaseKey": 1 },
+  {
+    unique: true,
+    partialFilterExpression: {
+      "payment.method": "phonepe",
+      "payment.status": "pending",
+      "payment.phonepePurchaseKey": { $type: "string" },
+    },
+  }
+);
 export default mongoose.model("Order", orderSchema);

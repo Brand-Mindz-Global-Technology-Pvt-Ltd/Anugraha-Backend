@@ -4,6 +4,7 @@ import {
   createCustomer,
   getAllCustomers,
   loginCustomer,
+  googleLoginCustomer,
   forgotPassword,
   resetPassword,
   getCustomerProfile,
@@ -24,6 +25,7 @@ const router = express.Router();
 router.post("/create", createCustomer);
 router.get("/get-all", getAllCustomers);
 router.post("/login", loginCustomer);
+router.post("/google-login", googleLoginCustomer);
 router.post("/forgot-password", forgotPassword);
 router.post("/reset-password/:token", resetPassword);
 router.patch("/:id/status", updateCustomerStatus);

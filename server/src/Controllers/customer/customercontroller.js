@@ -3,9 +3,11 @@ import generateCustomerId from "../../utils/generateCustomerId.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { ENV } from "../../Config/env.js";
+import firebaseAdminApp from "../../Config/firebase.js";
 import { sendMail } from "../../utils/mailer.js";
 import crypto from "crypto";
 import { exportToCSV, exportToExcel } from "../../utils/customerExport.js";
+import { getAuth } from "firebase-admin/auth";
 
 export const createCustomer = async (req, res) => {
   try {
@@ -117,6 +119,135 @@ export const loginCustomer = async (req, res) => {
     res.status(500).json({
       success: false,
       message: error.message,
+    });
+  }
+};
+
+export const googleLoginCustomer = async (req, res) => {
+  const authorization = req.headers.authorization;
+  const bearerToken =
+    typeof authorization === "string"
+      ? authorization.match(/^Bearer\s+(.+)$/i)?.[1]
+      : undefined;
+  const idToken =
+    typeof req.body?.idToken === "string"
+      ? req.body.idToken.trim()
+      : bearerToken;
+
+  if (!idToken) {
+    return res.status(400).json({
+      success: false,
+      message: "Firebase ID token is required",
+    });
+  }
+
+  let decodedToken;
+  try {
+    decodedToken = await getAuth(firebaseAdminApp).verifyIdToken(idToken);
+  } catch {
+    return res.status(401).json({
+      success: false,
+      message: "Invalid or expired Firebase ID token",
+    });
+  }
+
+  if (decodedToken.firebase?.sign_in_provider !== "google.com") {
+    return res.status(401).json({
+      success: false,
+      message: "A Google sign-in token is required",
+    });
+  }
+
+  const email =
+    typeof decodedToken.email === "string"
+      ? decodedToken.email.trim().toLowerCase()
+      : "";
+  if (!email || !/^\S+@\S+\.\S+$/.test(email)) {
+    return res.status(400).json({
+      success: false,
+      message: "The verified Google account must have a valid email address",
+    });
+  }
+
+  if (decodedToken.email_verified !== true) {
+    return res.status(403).json({
+      success: false,
+      message: "The Google account email must be verified",
+    });
+  }
+
+  const tokenName =
+    typeof decodedToken.name === "string" ? decodedToken.name.trim() : "";
+  const name = tokenName || email.slice(0, email.indexOf("@"));
+  const picture =
+    typeof decodedToken.picture === "string" ? decodedToken.picture : "";
+
+  try {
+    let customer = await Customer.findOne({ email });
+
+    if (!customer) {
+      const customerId = await generateCustomerId();
+      const password = await bcrypt.hash(
+        crypto.randomBytes(32).toString("hex"),
+        10,
+      );
+
+      try {
+        customer = await Customer.create({
+          customerId,
+          name,
+          email,
+          password,
+          phone: "",
+        });
+      } catch (error) {
+        if (error?.code !== 11000) {
+          throw error;
+        }
+
+        customer = await Customer.findOne({ email });
+        if (!customer) {
+          return res.status(409).json({
+            success: false,
+            message: "Customer account could not be created",
+          });
+        }
+      }
+    }
+
+    if (customer.status !== "Active") {
+      return res.status(403).json({
+        success: false,
+        message: "Account is not active",
+      });
+    }
+
+    const token = jwt.sign(
+      {
+        id: customer._id,
+        role: "customer",
+      },
+      ENV.Customer_JWT_SECRET,
+      { expiresIn: "1d" },
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: "Google sign-in successful",
+      data: {
+        id: customer._id,
+        customerId: customer.customerId,
+        name: customer.name,
+        email: customer.email,
+        phone: customer.phone || "",
+        picture,
+        token,
+      },
+    });
+  } catch {
+    return res.status(500).json({
+      success: false,
+      message: "Unable to complete Google sign-in",
     });
   }
 };

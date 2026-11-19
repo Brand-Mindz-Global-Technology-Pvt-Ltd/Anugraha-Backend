@@ -1,4 +1,7 @@
 .env
+.env.*
+!.env.example
 node_modules/
 rest.http
-
+/firebase-service-account.json
+uploads/

@@ -1,6 +1,8 @@
 import Product from "../Models/Product.js";
 import Category from "../Models/Category.js";
 
+const LOW_STOCK_THRESHOLD = 10;
+
 /* ================= GET INVENTORY ================= */
 
 export const getInventory = async (req, res) => {
@@ -14,30 +16,31 @@ export const getInventory = async (req, res) => {
       status,
     } = req.query;
 
-    const query = {};
+    const baseQuery = {};
 
     if (search) {
-      query.$or = [
+      baseQuery.$or = [
         { name: { $regex: search, $options: "i" } },
         { slug: { $regex: search, $options: "i" } },
       ];
     }
 
     if (category) {
-      query.category = category;
+      baseQuery.category = category;
     }
 
     if (subCategory) {
-      query.subCategory = subCategory;
+      baseQuery.subCategory = subCategory;
     }
 
-    // Existing filter behavior preserved
+    const query = { ...baseQuery };
+
     if (status === "Low") {
-      query.stock = { $lte: 10 };
+      query.stock = { $lte: LOW_STOCK_THRESHOLD };
     }
 
     if (status === "Medium") {
-      query.stock = { $gt: 10, $lte: 100 };
+      query.stock = { $gt: LOW_STOCK_THRESHOLD, $lte: 100 };
     }
 
     if (status === "High") {
@@ -53,10 +56,16 @@ export const getInventory = async (req, res) => {
       .sort({ createdAt: -1 });
 
     const totalProducts = await Product.countDocuments(query);
+    const lowStockCount = await Product.countDocuments({
+      ...baseQuery,
+      stock: { $lte: LOW_STOCK_THRESHOLD },
+    });
 
     return res.status(200).json({
       success: true,
       data,
+      lowStockThreshold: LOW_STOCK_THRESHOLD,
+      lowStockCount,
       pagination: {
         totalProducts,
         totalPages: Math.ceil(totalProducts / numericLimit),

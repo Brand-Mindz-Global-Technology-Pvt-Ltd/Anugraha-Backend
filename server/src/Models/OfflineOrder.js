@@ -1,5 +1,34 @@
 import mongoose from "mongoose";
 
+const offlineOrderItemSchema = new mongoose.Schema(
+    {
+        productId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Product",
+            required: true,
+        },
+        name: {
+            type: String,
+            required: true,
+        },
+        price: {
+            type: Number,
+            required: true,
+            min: 0,
+        },
+        costPriceSnapshot: {
+            type: Number,
+            min: 0,
+        },
+        qty: {
+            type: Number,
+            required: true,
+            min: 1,
+        },
+    },
+    { _id: false }
+);
+
 const offlineOrderSchema = new mongoose.Schema(
     {
         orderId: {
@@ -25,6 +54,11 @@ const offlineOrderSchema = new mongoose.Schema(
             type: String,
             required: true,
             trim: true,
+        },
+
+        items: {
+            type: [offlineOrderItemSchema],
+            default: undefined,
         },
 
         totalAmount: {

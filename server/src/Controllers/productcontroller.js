@@ -3,6 +3,23 @@ import Category from "../Models/Category.js";
 import fs from "fs";
 import path from "path";
 
+const parseNonNegativeCostPrice = (value) => {
+    if (typeof value !== "string" && typeof value !== "number") {
+        return null;
+    }
+
+    const normalizedValue =
+        typeof value === "string" ? value.trim() : value;
+
+    if (normalizedValue === "") {
+        return null;
+    }
+
+    const costPrice = Number(normalizedValue);
+    return Number.isFinite(costPrice) && costPrice >= 0
+        ? costPrice
+        : null;
+};
 
 const generateSlug = (name) => {
     const base = name
@@ -21,6 +38,7 @@ export const createProduct = async (req, res) => {
             productId,
             description,
             price,
+            costPrice,
             oldPrice,
             stock,
             brand,
@@ -44,6 +62,13 @@ export const createProduct = async (req, res) => {
 
         if (!productId) {
             return res.status(400).json({ message: "Product ID required" });
+        }
+
+        const parsedCostPrice = parseNonNegativeCostPrice(costPrice);
+        if (parsedCostPrice === null) {
+            return res.status(400).json({
+                message: "Cost price must be a non-negative number",
+            });
         }
 
         /* ---------- PREVENT DUPLICATE PRODUCT ID ---------- */
@@ -81,6 +106,7 @@ export const createProduct = async (req, res) => {
             slug: generateSlug(name),
             description,
             price: price ? Number(price) : 0,
+            costPrice: parsedCostPrice,
             oldPrice: oldPrice ? Number(oldPrice) : 0,
             stock: stock ? Number(stock) : 0,
             discount: discount ? Number(discount) : 0,
@@ -267,6 +293,7 @@ export const updateProduct = async (req, res) => {
             name,
             description,
             price,
+            costPrice,
             oldPrice,
             stock,
             brand,
@@ -285,6 +312,16 @@ export const updateProduct = async (req, res) => {
         const product = await Product.findById(id);
         if (!product) {
             return res.status(404).json({ message: "Product not found" });
+        }
+
+        let parsedCostPrice;
+        if (costPrice !== undefined) {
+            parsedCostPrice = parseNonNegativeCostPrice(costPrice);
+            if (parsedCostPrice === null) {
+                return res.status(400).json({
+                    message: "Cost price must be a non-negative number",
+                });
+            }
         }
 
         let keptImages = [];
@@ -351,6 +388,9 @@ export const updateProduct = async (req, res) => {
 
         if (description !== undefined) product.description = description;
         if (price !== undefined) product.price = Number(price);
+        if (parsedCostPrice !== undefined) {
+            product.costPrice = parsedCostPrice;
+        }
         if (oldPrice !== undefined) product.oldPrice = Number(oldPrice);
         if (stock !== undefined) product.stock = Number(stock);
         if (discount !== undefined) product.discount = Number(discount);
