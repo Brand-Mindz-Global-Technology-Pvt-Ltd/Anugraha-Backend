@@ -1,240 +1,130 @@
-
-
-
-import { useState, useMemo, useRef, useEffect } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
-  Search,
   Bell,
   ChevronDown,
   Menu,
-  LogOut,
+  Search,
   User,
-  X
+  LogOut,
+  X,
 } from "lucide-react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { navItems } from "../layout/navItems";
 import { useProfile } from "../context/ProfileContext";
 
-const DEFAULT_AVATAR =
-  "https://randomuser.me/api/portraits/men/32.jpg";
-
-function findTitle(pathname) {
-  for (const item of navItems) {
-    if (item.to && pathname.startsWith(item.to)) {
-      return item.label;
-    }
-    if (item.children) {
-      const child = item.children.find(c =>
-        pathname.startsWith(c.to)
-      );
-      if (child) return child.label;
-    }
-  }
-  return "Dashboard";
-}
-
-export default function Topbar({ onMenu }) {
-  const location = useLocation();
+export default function Topbar({ onMenu, onLogout }) {
   const navigate = useNavigate();
-  const { profile, role, username, loading } = useProfile();
+  const { role, username, loading } = useProfile();
   const [openSearch, setOpenSearch] = useState(false);
   const [openProfile, setOpenProfile] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [mobileSearchQuery, setMobileSearchQuery] = useState("");
-  const [filteredItems, setFilteredItems] = useState([]);
-  const [mobileFilteredItems, setMobileFilteredItems] = useState([]);
   const profileRef = useRef(null);
   const searchRef = useRef(null);
-  const title = useMemo(
-    () => findTitle(location.pathname),
-    [location.pathname]
+
+  const allNavItems = useMemo(
+    () =>
+      navItems.flatMap((item) => [
+        ...(item.to ? [{ label: item.label, to: item.to }] : []),
+        ...(item.children || []).map((child) => ({
+          label: child.label,
+          to: child.to,
+        })),
+      ]),
+    []
   );
+  const filteredItems = searchQuery.trim()
+    ? allNavItems.filter((item) =>
+        item.label.toLowerCase().includes(searchQuery.trim().toLowerCase())
+      )
+    : [];
 
-  /* -------------------- GET ADMIN ID -------------------- */
-  const getAdminId = () => {
-    try {
-      const admin = JSON.parse(localStorage.getItem("admin") || "{}");
-      return admin.id || "";
-    } catch (err) {
-      console.error("Failed to get admin ID:", err);
-      return "";
-    }
-  };
-
-  /* -------------------- FLATTEN NAV ITEMS -------------------- */
-  const allNavItems = useMemo(() => {
-    const items = [];
-    navItems.forEach(item => {
-      if (item.to) {
-        items.push({ label: item.label, to: item.to });
-      }
-      if (item.children) {
-        item.children.forEach(child => {
-          items.push({ label: child.label, to: child.to });
-        });
-      }
-    });
-    return items;
-  }, []);
-
-  /* -------------------- DESKTOP SEARCH FILTER -------------------- */
   useEffect(() => {
-    if (searchQuery.trim()) {
-      const filtered = allNavItems.filter(item =>
-        item.label.toLowerCase().includes(searchQuery.toLowerCase())
-      );
-      setFilteredItems(filtered);
-    } else {
-      setFilteredItems([]);
-    }
-  }, [searchQuery, allNavItems]);
-
-  /* -------------------- MOBILE SEARCH FILTER -------------------- */
-  useEffect(() => {
-    if (mobileSearchQuery.trim()) {
-      const filtered = allNavItems.filter(item =>
-        item.label.toLowerCase().includes(mobileSearchQuery.toLowerCase())
-      );
-      setMobileFilteredItems(filtered);
-    } else {
-      setMobileFilteredItems([]);
-    }
-  }, [mobileSearchQuery, allNavItems]);
-
-  /* -------------------- CLICK OUTSIDE -------------------- */
-  useEffect(() => {
-    const handleClickOutside = (e) => {
-      if (profileRef.current && !profileRef.current.contains(e.target)) {
+    const handleClickOutside = (event) => {
+      if (profileRef.current && !profileRef.current.contains(event.target)) {
         setOpenProfile(false);
       }
-      if (searchRef.current && !searchRef.current.contains(e.target)) {
-        setFilteredItems([]);
+      if (searchRef.current && !searchRef.current.contains(event.target)) {
         setSearchQuery("");
       }
     };
 
     document.addEventListener("mousedown", handleClickOutside);
-    return () =>
-      document.removeEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  /* -------------------- LOGOUT -------------------- */
-  const handleLogout = () => {
-    localStorage.clear();
-    navigate("/auth/login", { replace: true });
+  const getAdminId = () => {
+    try {
+      const admin = JSON.parse(localStorage.getItem("admin") || "{}");
+      return admin.id || "";
+    } catch (error) {
+      console.error("Failed to get admin ID:", error);
+      return "";
+    }
+  };
+
+  const navigateTo = (path) => {
+    const adminId = getAdminId();
+    navigate(adminId ? `${path}?id=${adminId}` : path);
+    setSearchQuery("");
+    setOpenSearch(false);
+    setOpenProfile(false);
   };
 
   const handleProfileNavigate = () => {
-    try {
-      const admin = JSON.parse(localStorage.getItem("admin") || "{}");
-      if (!admin.id) return;
-      navigate(`/admin/profile?id=${admin.id}`);
-      setOpenProfile(false);
-    } catch (err) {
-      console.error("Failed to navigate to profile:", err);
-    }
-  };
-
-  /* -------------------- HANDLE SEARCH NAVIGATION -------------------- */
-  const handleSearchNavigation = (path) => {
     const adminId = getAdminId();
-    if (adminId) {
-      navigate(`${path}?id=${adminId}`);
-    } else {
-      navigate(path);
-    }
-    setSearchQuery("");
-    setFilteredItems([]);
+    if (adminId) navigateTo(`/admin/profile`);
   };
 
-  /* -------------------- HANDLE MOBILE SEARCH NAVIGATION -------------------- */
-  const handleMobileSearchNavigation = (path) => {
-    const adminId = getAdminId();
-    if (adminId) {
-      navigate(`${path}?id=${adminId}`);
-    } else {
-      navigate(path);
-    }
-    setMobileSearchQuery("");
-    setMobileFilteredItems([]);
-    setOpenSearch(false);
-  };
-
-  /* -------------------- CLOSE MOBILE SEARCH -------------------- */
-  const closeMobileSearch = () => {
-    setOpenSearch(false);
-    setMobileSearchQuery("");
-    setMobileFilteredItems([]);
-  };
-
-  /* -------------------- SAFE DATA EXTRACTION -------------------- */
-  const profileImage =
-    profile?.profileImage?.url || DEFAULT_AVATAR;
-
+  const displayName = loading
+    ? "Loading..."
+    : username?.trim() || "Anugraha Admin";
   const displayRole =
-    role === "SUPER_ADMIN" ? "Anugraha Admin" : (role ? role.replace(/_/g, " ") : "Anugraha Admin");
+    role === "SUPER_ADMIN"
+      ? "Anugraha Admin"
+      : role
+        ? role.replace(/_/g, " ")
+        : "Anugraha Admin";
+  const avatarInitial = displayName === "Loading..." ? "A" : displayName[0];
 
   return (
     <>
-      <header className="h-16 bg-white border-b border-slate-200 rounded-lg flex items-center justify-between px-4 sm:px-6 sticky top-0 z-30 shadow-sm">
-        {/* ===== Left ===== */}
-        <div className="flex items-center gap-3 min-w-0">
-          {onMenu && (
-            <button
-              onClick={onMenu}
-              className="md:hidden h-9 w-9 flex items-center justify-center rounded-xl hover:bg-slate-100"
-            >
-              <Menu size={20} />
-            </button>
-          )}
-          <h1
-            className="
-    text-sm
-    sm:text-base
-    md:text-lg
-    font-semibold
-    text-slate-800
-    max-w-[180px]
-    sm:max-w-none
-    overflow-hidden
-    text-ellipsis
-    whitespace-nowrap
-  "
+      <header className="sticky top-0 z-30 flex h-[72px] shrink-0 items-center justify-between gap-4 border-b border-slate-200 bg-white px-4 sm:px-6 lg:px-8">
+        <div className="flex min-w-0 flex-1 items-center gap-3 lg:flex-initial">
+          <button
+            type="button"
+            onClick={onMenu}
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-slate-900 transition-colors hover:bg-[#d4a13f]/10 lg:hidden"
+            aria-label="Open navigation menu"
           >
-            {title}
-          </h1>
+            <Menu size={21} />
+          </button>
 
-
-        </div>
-
-        {/* ===== Center Search (Desktop) ===== */}
-        <div className="hidden md:flex flex-1 justify-center px-4 max-w-md mx-auto" ref={searchRef}>
-          <div className="relative w-full max-w-md">
-            <div className="flex items-center w-full bg-slate-50 rounded-full px-4 py-1.5 border border-slate-200 focus-within:border-[#d4a13f] focus-within:bg-white transition-colors">
-              <span className="flex items-center justify-center mr-2 p-1.5 rounded-full bg-[#d4a13f] text-slate-950">
-                <Search size={14} />
-              </span>
+          <div
+            className="relative hidden w-full max-w-[500px] lg:block"
+            ref={searchRef}
+          >
+            <div className="flex items-center rounded-full border border-slate-300 bg-white px-4 py-2.5 transition-colors focus-within:border-[#d4a13f]">
+              <Search size={18} className="mr-3 shrink-0 text-[#b8860b]" />
               <input
-                type="text"
-                placeholder="Search here..."
-                className="bg-transparent outline-none text-sm w-full placeholder-black"
+                type="search"
+                placeholder="Search pages..."
+                aria-label="Search pages"
+                className="w-full bg-transparent text-sm text-slate-900 outline-none placeholder:text-slate-500"
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(event) => setSearchQuery(event.target.value)}
               />
             </div>
-
-
-            {/* Search Results Dropdown (Desktop) */}
             {filteredItems.length > 0 && (
-              <div className="absolute top-full mt-2 w-full bg-white rounded-xl shadow-lg border border-slate-200 z-50 max-h-64 overflow-y-auto">
-                {filteredItems.map((item, index) => (
+              <div className="absolute top-full z-50 mt-2 max-h-64 w-full overflow-y-auto rounded-xl border border-slate-200 bg-white py-1 shadow-lg">
+                {filteredItems.map((item) => (
                   <button
-                    key={index}
-                    onClick={() => handleSearchNavigation(item.to)}
-                    className="flex items-center gap-3 w-full px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors border-b border-slate-100 last:border-b-0"
+                    key={item.to}
+                    type="button"
+                    onClick={() => navigateTo(item.to)}
+                    className="flex w-full items-center gap-3 px-4 py-3 text-left text-sm text-slate-900 transition-colors hover:bg-[#d4a13f]/10"
                   >
-                    <Search size={16} className="text-slate-400" />
-                    <span>{item.label}</span>
+                    <Search size={15} className="text-[#b8860b]" />
+                    {item.label}
                   </button>
                 ))}
               </div>
@@ -242,62 +132,66 @@ export default function Topbar({ onMenu }) {
           </div>
         </div>
 
-        {/* ===== Right ===== */}
-        <div className="flex items-center gap-3 min-w-0 justify-end">
+        <div className="flex shrink-0 items-center gap-2 sm:gap-4">
           <button
+            type="button"
             onClick={() => setOpenSearch(true)}
-            className="md:hidden h-9 w-9 flex items-center justify-center rounded-full  hover:bg-slate-100"
+            className="flex h-10 w-10 items-center justify-center rounded-lg text-slate-900 transition-colors hover:bg-[#d4a13f]/10 lg:hidden"
+            aria-label="Search pages"
           >
-            <Search size={18} />
+            <Search size={19} />
           </button>
+          <button
+            type="button"
+            className="relative flex h-10 w-10 items-center justify-center rounded-lg text-slate-900 transition-colors hover:bg-[#d4a13f]/10"
+            aria-label="Notifications"
+          >
+            <Bell size={20} />
+            <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-[#d4a13f]" />
+          </button>
+          <span className="hidden h-8 w-px bg-slate-200 sm:block" />
 
-          
-          {/* ===== Profile Dropdown ===== */}
           <div className="relative" ref={profileRef}>
-            <div
-              onClick={() => setOpenProfile(p => !p)}
-              className="flex items-center gap-2.5 cursor-pointer rounded-lg p-1.5 hover:bg-slate-100 select-none transition-colors"
+            <button
+              type="button"
+              onClick={() => setOpenProfile((open) => !open)}
+              className="flex items-center gap-2 rounded-lg p-1.5 text-left transition-colors hover:bg-[#d4a13f]/10 sm:gap-3"
+              aria-expanded={openProfile}
+              aria-label="Open admin profile menu"
             >
-              <img
-                src={profileImage}
-                alt="Admin"
-                className="h-9 w-9 rounded-lg object-cover ring-1 ring-slate-200"
-                onError={(e) => {
-                  e.currentTarget.src = DEFAULT_AVATAR;
-                }}
-              />
-
-              <div className="hidden md:block leading-tight text-left">
-                <p className="text-sm font-semibold text-slate-800">
-                  {loading ? "Loading..." : username?.slice(0, 20) || ""}
-                </p>
-                <p className="text-xs text-slate-500 font-medium">
+              <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[#d4a13f] font-serif text-lg text-white">
+                {avatarInitial}
+              </span>
+              <span className="hidden min-w-0 md:block">
+                <span className="block max-w-40 truncate text-sm font-semibold text-slate-900">
+                  {displayName}
+                </span>
+                <span className="block max-w-40 truncate text-xs text-slate-600">
                   {displayRole}
-                </p>
-              </div>
-
+                </span>
+              </span>
               <ChevronDown
-                size={14}
-                className={`hidden md:block transition-transform ${openProfile ? "rotate-180" : ""
-                  }`}
+                size={16}
+                className={`hidden text-slate-800 transition-transform md:block ${openProfile ? "rotate-180" : ""}`}
               />
-            </div>
+            </button>
 
             {openProfile && (
-              <div className="absolute right-0 mt-2 w-44 bg-white rounded-xl shadow-lg border border-slate-100 z-50 overflow-hidden">
+              <div className="absolute right-0 top-full z-50 mt-2 w-48 overflow-hidden rounded-xl border border-slate-200 bg-white py-1 shadow-lg">
                 <button
-                  className="flex items-center gap-3 w-full px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors border-b border-slate-100"
+                  type="button"
                   onClick={handleProfileNavigate}
+                  className="flex w-full items-center gap-3 px-4 py-3 text-sm text-slate-900 transition-colors hover:bg-[#d4a13f]/10"
                 >
-                  <User size={16} className="text-slate-500" />
-                  <span className="font-medium">Profile</span>
+                  <User size={16} className="text-[#b8860b]" />
+                  Profile
                 </button>
-
                 <button
-                  onClick={handleLogout}
-                  className="flex items-center gap-3 w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+                  type="button"
+                  onClick={onLogout}
+                  className="flex w-full items-center gap-3 border-t border-slate-200 px-4 py-3 text-sm text-slate-900 transition-colors hover:bg-[#d4a13f]/10"
                 >
-                  <LogOut size={16} />
+                  <LogOut size={16} className="text-[#b8860b]" />
                   Sign out
                 </button>
               </div>
@@ -306,126 +200,88 @@ export default function Topbar({ onMenu }) {
         </div>
       </header>
 
-      {/* ===== Mobile Search Overlay ===== */}
       {openSearch && (
         <div
-          className="fixed inset-0 z-50 bg-black/40 md:hidden"
-          onClick={closeMobileSearch}
+          className="fixed inset-0 z-50 bg-slate-900/30 lg:hidden"
+          onClick={() => setOpenSearch(false)}
         >
-          <div
-            className="bg-white w-full h-full flex flex-col"
-            onClick={(e) => e.stopPropagation()}
+          <section
+            className="flex h-full flex-col bg-white"
+            onClick={(event) => event.stopPropagation()}
+            aria-label="Search pages"
           >
-            {/* Mobile Search Header */}
-            <div className="flex items-center gap-3 p-4 border-b border-slate-200">
-              <Search size={18} className="text-slate-400" />
+            <div className="flex items-center gap-3 border-b border-slate-200 p-4">
+              <Search size={19} className="text-[#b8860b]" />
               <input
                 autoFocus
-                type="text"
-                placeholder="Search here..."
-                className="flex-1 outline-none text-sm"
-                value={mobileSearchQuery}
-                onChange={(e) => setMobileSearchQuery(e.target.value)}
+                type="search"
+                placeholder="Search pages..."
+                aria-label="Search pages"
+                className="min-w-0 flex-1 text-sm text-slate-900 outline-none placeholder:text-slate-500"
+                value={searchQuery}
+                onChange={(event) => setSearchQuery(event.target.value)}
               />
               <button
-                onClick={closeMobileSearch}
-                className="h-8 w-8 flex items-center justify-center rounded-full hover:bg-slate-100"
+                type="button"
+                onClick={() => {
+                  setOpenSearch(false);
+                  setSearchQuery("");
+                }}
+                className="flex h-9 w-9 items-center justify-center rounded-lg text-slate-900 hover:bg-[#d4a13f]/10"
+                aria-label="Close search"
               >
-                <X size={18} className="text-slate-600" />
+                <X size={19} />
               </button>
             </div>
-
-            {/* Mobile Search Results */}
-            <div className="flex-1 overflow-y-auto bg-slate-50">
-              {mobileFilteredItems.length > 0 ? (
-                <div className="p-4 space-y-2">
-                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide px-2 mb-3">
-                    Search Results ({mobileFilteredItems.length})
-                  </p>
-                  {mobileFilteredItems.map((item, index) => (
-                    <button
-                      key={index}
-                      onClick={() => handleMobileSearchNavigation(item.to)}
-                      className="flex items-center gap-4 w-full px-4 py-3.5 text-sm text-slate-700 bg-white hover:bg-blue-50 hover:border-blue-200 border border-slate-200 rounded-xl transition-all duration-200 shadow-sm hover:shadow-md group"
-                    >
-                      <div className="h-10 w-10 flex items-center justify-center rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 text-white group-hover:scale-110 transition-transform duration-200">
-                        <Search size={18} />
-                      </div>
-                      <div className="flex-1 text-left">
-                        <span className="font-semibold text-slate-800 group-hover:text-blue-600 transition-colors">
-                          {item.label}
-                        </span>
-                        <p className="text-xs text-slate-500 mt-0.5">
-                          Navigate to {item.label}
-                        </p>
-                      </div>
-                      <ChevronDown
-                        size={16}
-                        className="text-slate-400 -rotate-90 group-hover:translate-x-1 transition-transform duration-200"
-                      />
-                    </button>
-                  ))}
-                </div>
-              ) : mobileSearchQuery.trim() ? (
-                <div className="flex flex-col items-center justify-center h-full p-8 text-center">
-                  <div className="relative mb-6">
-                    <div className="absolute inset-0 bg-blue-100 rounded-full blur-2xl opacity-50"></div>
-                    <div className="relative h-20 w-20 flex items-center justify-center rounded-full bg-gradient-to-br from-slate-100 to-slate-200">
-                      <Search size={36} className="text-slate-400" strokeWidth={1.5} />
-                    </div>
+            <div className="flex-1 overflow-y-auto p-4">
+              {searchQuery.trim() ? (
+                filteredItems.length ? (
+                  <div className="divide-y divide-slate-200">
+                    {filteredItems.map((item) => (
+                      <button
+                        key={item.to}
+                        type="button"
+                        onClick={() => navigateTo(item.to)}
+                        className="flex w-full items-center gap-3 py-4 text-left text-sm text-slate-900"
+                      >
+                        <Search size={16} className="text-[#b8860b]" />
+                        {item.label}
+                      </button>
+                    ))}
                   </div>
-                  <h3 className="text-base font-semibold text-slate-800 mb-2">
-                    No results found
-                  </h3>
-                  <p className="text-sm text-slate-500 max-w-xs">
-                    We couldn't find any pages matching{" "}
-                    <span className="font-medium text-slate-700">
-                      "{mobileSearchQuery}"
-                    </span>
+                ) : (
+                  <p className="py-8 text-center text-sm text-slate-700">
+                    No matching pages.
                   </p>
-                  <p className="text-xs text-slate-400 mt-3">
-                    Try using different keywords or check your spelling
-                  </p>
-                </div>
+                )
               ) : (
-                <div className="flex flex-col items-center justify-center h-full p-8 text-center">
-                  <div className="relative mb-6">
-                    <div className="absolute inset-0 bg-blue-100 rounded-full blur-2xl opacity-30 animate-pulse"></div>
-                    <div className="relative h-20 w-20 flex items-center justify-center rounded-full bg-gradient-to-br from-blue-50 to-blue-100 border-2 border-blue-200">
-                      <Search size={36} className="text-blue-500" strokeWidth={1.5} />
-                    </div>
-                  </div>
-                  <h3 className="text-base font-semibold text-slate-800 mb-2">
-                    Search Navigation
-                  </h3>
-                  <p className="text-sm text-slate-500 max-w-xs mb-6">
-                    Type to search across Dashboard, Products, Orders, and more...
+                <div>
+                  <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-600">
+                    Quick access
                   </p>
-
-                  {/* Popular Searches */}
-                  <div className="w-full max-w-sm">
-                    <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-3">
-                      Quick Access
-                    </p>
-                    <div className="flex flex-wrap gap-2 justify-center">
-                      {['Dashboard', 'Products', 'Orders', 'Customers'].map((label) => {
-                        const navItem = allNavItems.find(item => item.label === label);
-                        return navItem ? (
+                  <div className="flex flex-wrap gap-2">
+                    {["Dashboard", "Products", "Orders", "Customers"].map(
+                      (label) => {
+                        const item = allNavItems.find(
+                          (navItem) => navItem.label === label
+                        );
+                        return item ? (
                           <button
                             key={label}
-                            onClick={() => handleMobileSearchNavigation(navItem.to)}
-                            className="px-4 py-2 text-xs font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-full transition-colors duration-200 border border-blue-200"
+                            type="button"
+                            onClick={() => navigateTo(item.to)}
+                            className="rounded-full border border-[#d4a13f]/60 px-4 py-2 text-sm text-slate-900 transition-colors hover:bg-[#d4a13f]/10"
                           >
                             {label}
                           </button>
                         ) : null;
-                      })}
-                    </div>
+                      }
+                    )}
                   </div>
                 </div>
               )}
             </div>
-          </div>
+          </section>
         </div>
       )}
     </>

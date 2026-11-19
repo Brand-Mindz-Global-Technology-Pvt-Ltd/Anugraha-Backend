@@ -57,7 +57,7 @@ const Setting = () => {
         {/* Header */}
         <div className="mb-4 sm:mb-6">
           <div className="flex items-center gap-3 mb-2">
-            <div className="w-1 h-8 bg-gradient-to-b from-blue-500 to-blue-600 rounded-full" />
+            <div className="w-1 h-8 bg-[#d4a13f] rounded-full" />
             <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 tracking-tight">
               Settings
             </h1>

@@ -18,6 +18,8 @@ export const InventoryProvider = ({ children }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalProducts, setTotalProducts] = useState(0);
+  const [lowStockCount, setLowStockCount] = useState(0);
+  const [lowStockThreshold, setLowStockThreshold] = useState(null);
 
   /* ---------------- FETCH PRODUCTS ---------------- */
 
@@ -36,6 +38,8 @@ export const InventoryProvider = ({ children }) => {
         setData(res.data);
         setTotalPages(res.pagination.totalPages);
         setTotalProducts(res.pagination.totalProducts);
+        setLowStockCount(res.lowStockCount);
+        setLowStockThreshold(res.lowStockThreshold);
       }
     } catch (err) {
       console.error("Inventory fetch error:", err);
@@ -96,6 +100,8 @@ export const InventoryProvider = ({ children }) => {
         currentPage,
         totalPages,
         totalProducts,
+        lowStockCount,
+        lowStockThreshold,
         setSearchTerm,
         setFilterCategory,
         setFilterStatus,

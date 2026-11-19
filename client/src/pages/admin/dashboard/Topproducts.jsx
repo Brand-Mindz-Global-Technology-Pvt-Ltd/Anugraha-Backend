@@ -2,11 +2,7 @@ import { useDashboard } from "../../../context/Dashboardcontext.jsx";
 import { Skeleton } from "./Skeletons.jsx";
 
 const PRODUCT_COLORS = [
-  { bar: "#3b82f6", light: "#eff6ff", text: "#1d4ed8", label: "bg-blue-100 text-blue-700" },
-  { bar: "#10b981", light: "#f0fdf4", text: "#047857", label: "bg-emerald-100 text-emerald-700" },
-  { bar: "#8b5cf6", light: "#f5f3ff", text: "#6d28d9", label: "bg-violet-100 text-violet-700" },
-  { bar: "#f59e0b", light: "#fffbeb", text: "#b45309", label: "bg-amber-100 text-amber-700" },
-  { bar: "#ef4444", light: "#fef2f2", text: "#b91c1c", label: "bg-rose-100 text-rose-700" },
+  { bar: "#d4a13f", light: "#ffffff", text: "#b8860b", label: "bg-[#d4a13f]/10 text-[#b8860b]" },
 ];
 
 
@@ -60,7 +56,7 @@ const TopProducts = () => {
             className="rounded-xl p-3.5 transition-all"
             style={{
               background: p.colors.light,
-              border: `1px solid ${p.colors.bar}22`,
+              border: "1px solid #e2e8f0",
             }}
             onMouseEnter={e => e.currentTarget.style.transform = "translateX(4px)"}
             onMouseLeave={e => e.currentTarget.style.transform = "translateX(0)"}
@@ -98,7 +94,7 @@ const TopProducts = () => {
                 className="h-1.5 rounded-full transition-all duration-700"
                 style={{
                   width: `${(p.percent / maxPercent) * 100}%`,
-                  background: `linear-gradient(90deg, ${p.colors.bar}cc, ${p.colors.bar})`,
+                  background: p.colors.bar,
                 }}
               />
             </div>

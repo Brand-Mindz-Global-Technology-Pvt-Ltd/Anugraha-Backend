@@ -185,7 +185,7 @@ export default function CategoryBulkUploadModal({
       <div className="bg-white w-full max-w-6xl rounded-xl shadow-2xl flex flex-col max-h-[95vh] sm:max-h-[90vh] overflow-hidden">
         
         {/* Header */}
-        <div className="bg-gradient-to-r from-[#162A78] to-[#1e3a9e] text-white p-4 sm:p-6 flex justify-between items-center">
+        <div className="bg-[#d4a13f] text-white p-4 sm:p-6 flex justify-between items-center">
           <div className="flex items-center gap-3">
             <FileSpreadsheet className="w-6 h-6 sm:w-7 sm:h-7" />
             <h2 className="text-lg sm:text-xl font-semibold">Bulk Upload Categories</h2>
@@ -202,17 +202,17 @@ export default function CategoryBulkUploadModal({
         <div className="p-4 sm:p-6 space-y-4 sm:space-y-6 overflow-y-auto flex-1">
           
           {/* Download Template Card */}
-          <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 p-4 rounded-xl shadow-sm hover:shadow-md transition-shadow">
+          <div className="bg-white border border-[#d4a13f]/50 p-4 rounded-xl shadow-sm hover:shadow-md transition-shadow">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
               <div className="flex items-center gap-3">
-                <div className="bg-green-100 p-2 rounded-lg">
+                <div className="bg-[#d4a13f]/10 p-2 rounded-lg">
                   <FileSpreadsheet className="text-green-600 w-5 h-5 sm:w-6 sm:h-6" />
                 </div>
                 <div>
-                  <span className="text-green-800 font-semibold text-sm sm:text-base block">
+                  <span className="text-slate-900 font-semibold text-sm sm:text-base block">
                     Download Template
                   </span>
-                  <span className="text-green-600 text-xs sm:text-sm">
+                  <span className="text-slate-700 text-xs sm:text-sm">
                     Use this template to format your data correctly
                   </span>
                 </div>
@@ -220,7 +220,7 @@ export default function CategoryBulkUploadModal({
 
               <button
                 onClick={downloadTemplate}
-                className="bg-green-600 hover:bg-green-700 text-white px-4 py-2.5 rounded-lg flex items-center gap-2 font-medium transition-colors shadow-sm hover:shadow w-full sm:w-auto justify-center"
+                className="bg-[#d4a13f] hover:bg-[#bd8e32] text-white px-4 py-2.5 rounded-lg flex items-center gap-2 font-medium transition-colors shadow-sm hover:shadow w-full sm:w-auto justify-center"
               >
                 <Download size={18} />
                 <span className="text-sm sm:text-base">Download</span>
@@ -237,7 +237,7 @@ export default function CategoryBulkUploadModal({
               onDrop={handleDrop}
               className={`border-2 border-dashed rounded-xl p-8 sm:p-12 text-center transition-all ${
                 dragActive 
-                  ? "border-[#162A78] bg-blue-50" 
+                  ? "border-[#d4a13f] bg-[#d4a13f]/10"
                   : "border-gray-300 hover:border-gray-400 bg-gray-50"
               }`}
             >
@@ -268,10 +268,10 @@ export default function CategoryBulkUploadModal({
 
           {/* File Info */}
           {file && (
-            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 p-4 rounded-xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 shadow-sm">
+            <div className="bg-white border border-slate-200 p-4 rounded-xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 shadow-sm">
               <div className="flex items-center gap-3 flex-1 min-w-0">
-                <div className="bg-blue-100 p-2 rounded-lg flex-shrink-0">
-                  <CheckCircle className="text-blue-600" size={20} />
+                <div className="bg-[#d4a13f]/10 p-2 rounded-lg flex-shrink-0">
+                  <CheckCircle className="text-[#b8860b]" size={20} />
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="font-medium text-gray-800 text-sm sm:text-base truncate">{file.name}</p>

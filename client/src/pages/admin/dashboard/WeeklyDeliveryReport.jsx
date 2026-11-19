@@ -55,19 +55,19 @@ const WeeklyDeliveryReport = () => {
     if (!active || !payload?.length) return null;
     return (
       <div style={{
-        background: "#1e293b",
-        border: "1px solid #334155",
+        background: "#ffffff",
+        border: "1px solid #e2e8f0",
         borderRadius: "10px",
         padding: "10px 14px",
         fontSize: "12px",
-        color: "#f8fafc",
-        boxShadow: "0 8px 32px rgba(0,0,0,0.25)",
+        color: "#172033",
+        boxShadow: "0 8px 24px rgba(15,23,42,0.08)",
       }}>
-        <p style={{ color: "#94a3b8", marginBottom: 6, fontWeight: 600 }}>{label}</p>
+        <p style={{ color: "#465064", marginBottom: 6, fontWeight: 600 }}>{label}</p>
         {payload.map((p, i) => (
-          <p key={i} style={{ color: p.dataKey === "today" ? "#10b981" : "#60a5fa", margin: "2px 0" }}>
+          <p key={i} style={{ color: p.dataKey === "today" ? "#d4a13f" : "#172033", margin: "2px 0" }}>
             {p.dataKey === "today" ? "This Week" : "Last Week"}:{" "}
-            <strong style={{ color: "#f8fafc" }}>{p.value}</strong>
+            <strong style={{ color: "#172033" }}>{p.value}</strong>
           </p>
         ))}
       </div>
@@ -89,9 +89,9 @@ const WeeklyDeliveryReport = () => {
           onClick={handleExport}
           className="flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-xl text-xs font-semibold transition-all flex-shrink-0"
           style={{
-            background: "linear-gradient(135deg, #10b981, #059669)",
+            background: "#d4a13f",
             color: "#fff",
-            boxShadow: "0 2px 12px rgba(16,185,129,0.35)",
+            boxShadow: "0 2px 12px rgba(212,161,63,0.18)",
           }}
         >
           <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 sm:h-3.5 sm:w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -108,13 +108,13 @@ const WeeklyDeliveryReport = () => {
         {/* Last Week */}
         <div
           className="rounded-xl p-2.5 sm:p-3.5"
-          style={{ background: "#eff6ff", border: "1px solid #dbeafe" }}
+          style={{ background: "#ffffff", border: "1px solid #e2e8f0" }}
         >
           <div className="flex items-center gap-1.5 mb-1.5 sm:mb-2">
-            <div className="w-2 h-2 rounded-full bg-blue-500 flex-shrink-0" />
+            <div className="w-2 h-2 rounded-full bg-slate-900 flex-shrink-0" />
             <p className="text-xs text-slate-500 font-medium">Last Week</p>
           </div>
-          <p className="text-lg sm:text-xl font-bold text-blue-600">
+          <p className="text-lg sm:text-xl font-bold text-slate-900">
             {lastWeekTotal.toLocaleString("en-IN")}
           </p>
           <p className="text-xs text-slate-400 mt-0.5">Deliveries</p>
@@ -123,17 +123,17 @@ const WeeklyDeliveryReport = () => {
         {/* This Week */}
         <div
           className="rounded-xl p-2.5 sm:p-3.5"
-          style={{ background: "#f0fdf4", border: "1px solid #bbf7d0" }}
+          style={{ background: "#ffffff", border: "1px solid #e2e8f0" }}
         >
           <div className="flex items-center gap-1.5 mb-1.5 sm:mb-2">
-            <div className="w-2 h-2 rounded-full bg-emerald-500 flex-shrink-0" />
+            <div className="w-2 h-2 rounded-full bg-[#d4a13f] flex-shrink-0" />
             <p className="text-xs text-slate-500 font-medium">This Week</p>
           </div>
-          <p className="text-lg sm:text-xl font-bold text-emerald-600">
+          <p className="text-lg sm:text-xl font-bold text-[#b8860b]">
             {thisWeekTotal.toLocaleString("en-IN")}
           </p>
           <div className="flex items-center gap-1 mt-0.5">
-            <span className={`text-xs font-semibold ${isPositive ? "text-emerald-500" : "text-red-400"}`}>
+            <span className="text-xs font-semibold text-[#b8860b]">
               {isPositive ? "▲" : "▼"} {Math.abs(weekChange)}%
             </span>
             <span className="text-xs text-slate-400">vs last</span>
@@ -143,7 +143,7 @@ const WeeklyDeliveryReport = () => {
         {/* Last Month */}
         <div
           className="rounded-xl p-2.5 sm:p-3.5"
-          style={{ background: "#fafafa", border: "1px solid #e2e8f0" }}
+          style={{ background: "#ffffff", border: "1px solid #e2e8f0" }}
         >
           <div className="flex items-center gap-1.5 mb-1.5 sm:mb-2">
             <div className="w-2 h-2 rounded-full bg-slate-400 flex-shrink-0" />
@@ -158,13 +158,13 @@ const WeeklyDeliveryReport = () => {
         {/* This Month */}
         <div
           className="rounded-xl p-2.5 sm:p-3.5"
-          style={{ background: "#fafafa", border: "1px solid #e2e8f0" }}
+          style={{ background: "#ffffff", border: "1px solid #e2e8f0" }}
         >
           <div className="flex items-center gap-1.5 mb-1.5 sm:mb-2">
-            <div className="w-2 h-2 rounded-full bg-indigo-400 flex-shrink-0" />
+            <div className="w-2 h-2 rounded-full bg-[#d4a13f] flex-shrink-0" />
             <p className="text-xs text-slate-500 font-medium">This Month</p>
           </div>
-          <p className="text-lg sm:text-xl font-bold text-indigo-600 truncate">
+          <p className="text-lg sm:text-xl font-bold text-[#b8860b] truncate">
             ₹{currentMonthRevenue.toLocaleString("en-IN")}
           </p>
           <p className="text-xs text-slate-400 mt-0.5">Revenue</p>
@@ -173,31 +173,21 @@ const WeeklyDeliveryReport = () => {
       </div>
 
       {/* ── Chart ── */}
-      <div style={{ background: "#f8fafc", borderRadius: "14px", padding: "12px 4px 8px" }}>
+      <div style={{ background: "#ffffff", borderRadius: "14px", padding: "12px 4px 8px" }}>
         <ResponsiveContainer width="100%" height={180}>
           <AreaChart data={chartData} margin={{ top: 4, right: 4, left: -24, bottom: 0 }}>
-            <defs>
-              <linearGradient id="gradLastWeek" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%"  stopColor="#2563eb" stopOpacity={0.25} />
-                <stop offset="95%" stopColor="#2563eb" stopOpacity={0.02} />
-              </linearGradient>
-              <linearGradient id="gradToday" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%"  stopColor="#10b981" stopOpacity={0.3} />
-                <stop offset="95%" stopColor="#10b981" stopOpacity={0.02} />
-              </linearGradient>
-            </defs>
             <CartesianGrid stroke="#e2e8f0" strokeDasharray="4 4" vertical={false} />
             <XAxis
               dataKey="name"
               axisLine={false}
               tickLine={false}
-              tick={{ fill: "#94a3b8", fontSize: 10, fontWeight: 500 }}
+              tick={{ fill: "#465064", fontSize: 10, fontWeight: 500 }}
               interval={0}
             />
             <YAxis
               axisLine={false}
               tickLine={false}
-              tick={{ fill: "#94a3b8", fontSize: 10 }}
+              tick={{ fill: "#465064", fontSize: 10 }}
               width={28}
             />
             <Tooltip
@@ -207,20 +197,22 @@ const WeeklyDeliveryReport = () => {
             <Area
               type="monotone"
               dataKey="lastWeek"
-              stroke="#2563eb"
+              stroke="#172033"
               strokeWidth={2}
-              fill="url(#gradLastWeek)"
+              fill="#172033"
+              fillOpacity={0.06}
               dot={false}
-              activeDot={{ r: 4, fill: "#2563eb", stroke: "#fff", strokeWidth: 2 }}
+              activeDot={{ r: 4, fill: "#172033", stroke: "#fff", strokeWidth: 2 }}
             />
             <Area
               type="monotone"
               dataKey="today"
-              stroke="#10b981"
+              stroke="#d4a13f"
               strokeWidth={2}
-              fill="url(#gradToday)"
+              fill="#d4a13f"
+              fillOpacity={0.12}
               dot={false}
-              activeDot={{ r: 4, fill: "#10b981", stroke: "#fff", strokeWidth: 2 }}
+              activeDot={{ r: 4, fill: "#d4a13f", stroke: "#fff", strokeWidth: 2 }}
             />
           </AreaChart>
         </ResponsiveContainer>
@@ -229,20 +221,18 @@ const WeeklyDeliveryReport = () => {
       {/* ── Legend ── */}
       <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mt-3 sm:mt-4 px-1">
         <div className="flex items-center gap-2">
-          <div className="w-5 sm:w-6 h-0.5 rounded-full bg-blue-600" />
+          <div className="w-5 sm:w-6 h-0.5 rounded-full bg-slate-900" />
           <span className="text-xs text-slate-500 font-medium">Last Week</span>
           <span className="text-xs font-bold text-slate-700">{lastWeekTotal.toLocaleString("en-IN")}</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="w-5 sm:w-6 h-0.5 rounded-full bg-emerald-500" />
+          <div className="w-5 sm:w-6 h-0.5 rounded-full bg-[#d4a13f]" />
           <span className="text-xs text-slate-500 font-medium">This Week</span>
           <span className="text-xs font-bold text-slate-700">{thisWeekTotal.toLocaleString("en-IN")}</span>
         </div>
         <div className="ml-auto">
           <span
-            className={`text-xs font-semibold px-2 py-1 rounded-full ${
-              isPositive ? "bg-emerald-50 text-emerald-600" : "bg-red-50 text-red-500"
-            }`}
+            className="text-xs font-semibold px-2 py-1 rounded-full bg-[#d4a13f]/10 text-[#b8860b]"
           >
             {isPositive ? "↑" : "↓"} {Math.abs(weekChange)}% WoW
           </span>

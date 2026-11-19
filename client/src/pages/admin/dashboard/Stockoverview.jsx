@@ -8,24 +8,24 @@ const stockCards = (totalProducts, lowStockCount, highStockCount) => [
     label: "Total Products",
     value: totalProducts,
     icon: Layers,
-    bg: "#f8fafc", border: "#e2e8f0",
-    iconBg: "#e2e8f0", iconColor: "text-slate-600", valueColor: "text-slate-800",
+    bg: "#ffffff", border: "#e2e8f0",
+    iconBg: "#d4a13f1a", iconColor: "text-[#b8860b]", valueColor: "text-slate-900",
   },
   {
     key: "low",
     label: "Low Stock",
     value: lowStockCount,
     icon: AlertTriangle,
-    bg: "#fff1f2", border: "#fecdd3",
-    iconBg: "#ffe4e6", iconColor: "text-rose-500", valueColor: "text-rose-600",
+    bg: "#ffffff", border: "#e2e8f0",
+    iconBg: "#d4a13f1a", iconColor: "text-[#b8860b]", valueColor: "text-slate-900",
   },
   {
     key: "high",
     label: "Well Stocked",
     value: highStockCount,
     icon: CheckCircle2,
-    bg: "#f0fdf4", border: "#bbf7d0",
-    iconBg: "#dcfce7", iconColor: "text-emerald-500", valueColor: "text-emerald-600",
+    bg: "#ffffff", border: "#e2e8f0",
+    iconBg: "#d4a13f1a", iconColor: "text-[#b8860b]", valueColor: "text-slate-900",
   },
 ];
 
@@ -56,7 +56,7 @@ const StockOverview = () => {
         <div className="flex items-center gap-2.5">
           <div
             className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center flex-shrink-0"
-            style={{ background: "#f1f5f9" }}
+            style={{ background: "#d4a13f1a" }}
           >
             <Package className="w-4 h-4 text-slate-600" />
           </div>
@@ -71,7 +71,7 @@ const StockOverview = () => {
         </div>
         <span
           className="text-xs font-semibold px-2.5 py-1 rounded-full flex-shrink-0"
-          style={{ background: "#f1f5f9", color: "#64748b" }}
+          style={{ background: "#ffffff", color: "#465064", border: "1px solid #e2e8f0" }}
         >
           {totalProducts} total
         </span>
@@ -107,11 +107,11 @@ const StockOverview = () => {
         {/* Low Stock */}
         <div
           className="rounded-xl p-3 sm:p-4"
-          style={{ background: "#fff1f2", border: "1px solid #fecdd3" }}
+          style={{ background: "#ffffff", border: "1px solid #e2e8f0" }}
         >
           <div className="flex items-center gap-1.5 mb-3">
-            <AlertTriangle className="w-3.5 h-3.5 text-rose-500 flex-shrink-0" />
-            <p className="text-xs font-semibold text-rose-600 uppercase tracking-wide">
+            <AlertTriangle className="w-3.5 h-3.5 text-[#b8860b] flex-shrink-0" />
+            <p className="text-xs font-semibold text-[#b8860b] uppercase tracking-wide">
               Low Stock — Top 5
             </p>
           </div>
@@ -134,8 +134,8 @@ const StockOverview = () => {
                     className="text-xs font-semibold px-2 py-0.5 rounded-full flex-shrink-0"
                     style={
                       item.stock === 0
-                        ? { background: "#fee2e2", color: "#dc2626" }
-                        : { background: "#ffe4e6", color: "#e11d48" }
+                        ? { background: "#d4a13f1a", color: "#172033" }
+                        : { background: "#d4a13f1a", color: "#172033" }
                     }
                   >
                     {item.stock === 0 ? "Out" : `${item.stock} left`}
@@ -149,11 +149,11 @@ const StockOverview = () => {
         {/* High Stock */}
         <div
           className="rounded-xl p-3 sm:p-4"
-          style={{ background: "#f0fdf4", border: "1px solid #bbf7d0" }}
+          style={{ background: "#ffffff", border: "1px solid #e2e8f0" }}
         >
           <div className="flex items-center gap-1.5 mb-3">
-            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 flex-shrink-0" />
-            <p className="text-xs font-semibold text-emerald-600 uppercase tracking-wide">
+            <CheckCircle2 className="w-3.5 h-3.5 text-[#b8860b] flex-shrink-0" />
+            <p className="text-xs font-semibold text-[#b8860b] uppercase tracking-wide">
               High Stock — Top 5
             </p>
           </div>
@@ -174,7 +174,7 @@ const StockOverview = () => {
                   </span>
                   <span
                     className="text-xs font-semibold px-2 py-0.5 rounded-full flex-shrink-0"
-                    style={{ background: "#dcfce7", color: "#15803d" }}
+                    style={{ background: "#d4a13f1a", color: "#172033" }}
                   >
                     {item.stock.toLocaleString("en-IN")} units
                   </span>

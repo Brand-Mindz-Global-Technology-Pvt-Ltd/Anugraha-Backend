@@ -15,7 +15,7 @@ const buildStatCards = (data) => {
       key: "totalSales",
       title: "Total Sales",
       icon: IndianRupee,
-      bg: "bg-blue-200", hoverBg: "hover:bg-blue-300", color: "blue",
+      bg: "bg-[#d4a13f]/10", hoverBg: "hover:bg-[#d4a13f]/20", color: "blue",
       value: `₹${(sales?.total ?? 0).toLocaleString("en-IN")}`,
       sub: "All-time revenue",
     },
@@ -23,7 +23,7 @@ const buildStatCards = (data) => {
       key: "todaySales",
       title: "Today's Sales",
       icon: TrendingUp,
-      bg: "bg-cyan-200", hoverBg: "hover:bg-cyan-300", color: "cyan",
+      bg: "bg-[#d4a13f]/10", hoverBg: "hover:bg-[#d4a13f]/20", color: "cyan",
       value: `₹${(sales?.today ?? 0).toLocaleString("en-IN")}`,
       sub: `${sales?.percentage >= 0 ? "+" : ""}${sales?.percentage ?? 0}% vs yesterday`,
     },
@@ -31,7 +31,7 @@ const buildStatCards = (data) => {
       key: "totalOrders",
       title: "Total Orders",
       icon: ShoppingCart,
-      bg: "bg-emerald-200", hoverBg: "hover:bg-emerald-300", color: "emerald",
+      bg: "bg-[#d4a13f]/10", hoverBg: "hover:bg-[#d4a13f]/20", color: "emerald",
       value: (orders?.total ?? 0).toLocaleString("en-IN"),
       sub: "All-time orders",
     },
@@ -39,7 +39,7 @@ const buildStatCards = (data) => {
       key: "todayOrders",
       title: "Today's Orders",
       icon: CalendarDays,
-      bg: "bg-teal-200", hoverBg: "hover:bg-teal-300", color: "teal",
+      bg: "bg-[#d4a13f]/10", hoverBg: "hover:bg-[#d4a13f]/20", color: "teal",
       value: (orders?.today ?? 0).toLocaleString("en-IN"),
       sub: `${orders?.percentage >= 0 ? "+" : ""}${orders?.percentage ?? 0}% vs yesterday`,
     },
@@ -47,7 +47,7 @@ const buildStatCards = (data) => {
       key: "newCustomers",
       title: "New Customers",
       icon: UserPlus,
-      bg: "bg-purple-200", hoverBg: "hover:bg-purple-300", color: "purple",
+      bg: "bg-[#d4a13f]/10", hoverBg: "hover:bg-[#d4a13f]/20", color: "purple",
       value: (customers?.newToday ?? 0).toLocaleString("en-IN"),
       sub: `${customers?.percentage >= 0 ? "+" : ""}${customers?.percentage ?? 0}% vs yesterday`,
     },
@@ -55,7 +55,7 @@ const buildStatCards = (data) => {
       key: "totalCustomers",
       title: "Total Customers",
       icon: Users,
-      bg: "bg-orange-200", hoverBg: "hover:bg-orange-300", color: "orange",
+      bg: "bg-[#d4a13f]/10", hoverBg: "hover:bg-[#d4a13f]/20", color: "orange",
       value: (customers?.total ?? 0).toLocaleString("en-IN"),
       sub: "All-time registered",
     },
@@ -121,22 +121,22 @@ const SalesSummary = () => {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div className="rounded-2xl bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200 p-5 flex items-center justify-between">
+        <div className="rounded-2xl bg-white border border-slate-200 p-5 flex items-center justify-between">
           <div>
-            <p className="text-xs font-semibold text-blue-500 uppercase tracking-wide mb-1">This Month</p>
-            <h4 className="text-2xl font-bold text-blue-700">
+            <p className="text-xs font-semibold text-[#b8860b] uppercase tracking-wide mb-1">This Month</p>
+            <h4 className="text-2xl font-bold text-slate-900">
               ₹{(sales?.thisMonth ?? 0).toLocaleString("en-IN")}
             </h4>
             <p className="text-xs text-slate-500 mt-1">
               {(orders?.thisMonth ?? 0).toLocaleString("en-IN")} orders
             </p>
           </div>
-          <div className="w-12 h-12 rounded-full bg-blue-200 flex items-center justify-center">
-            <TrendingUp className="w-6 h-6 text-blue-600" />
+          <div className="w-12 h-12 rounded-full bg-[#d4a13f]/10 flex items-center justify-center">
+            <TrendingUp className="w-6 h-6 text-[#b8860b]" />
           </div>
         </div>
 
-        <div className="rounded-2xl bg-gradient-to-br from-slate-50 to-slate-100 border border-slate-200 p-5 flex items-center justify-between">
+        <div className="rounded-2xl bg-white border border-slate-200 p-5 flex items-center justify-between">
           <div>
             <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Last Month</p>
             <h4 className="text-2xl font-bold text-slate-700">
@@ -146,8 +146,8 @@ const SalesSummary = () => {
               {(orders?.lastMonth ?? 0).toLocaleString("en-IN")} orders
             </p>
           </div>
-          <div className="w-12 h-12 rounded-full bg-slate-200 flex items-center justify-center">
-            <CalendarDays className="w-6 h-6 text-slate-500" />
+          <div className="w-12 h-12 rounded-full bg-[#d4a13f]/10 flex items-center justify-center">
+            <CalendarDays className="w-6 h-6 text-[#b8860b]" />
           </div>
         </div>
       </div>

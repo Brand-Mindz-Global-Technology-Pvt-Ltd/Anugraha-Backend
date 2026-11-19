@@ -15,10 +15,10 @@ import {
 } from 'lucide-react';
 import { useCustomers, STATUS, FILTERS, SEARCH_FIELDS } from '../../context/CustomerContext';
 
-// ─── Shimmer pulse line ───────────────────────────────────────────────────────
+// ─── Loading placeholder ──────────────────────────────────────────────────────
 const Shimmer = ({ w = 'w-full', h = 'h-3', rounded = 'rounded' }) => (
   <div
-    className={`${w} ${h} ${rounded} bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 bg-[length:400%_100%] animate-shimmer`}
+    className={`${w} ${h} ${rounded} bg-[#d4a13f]/10 animate-pulse`}
   />
 );
 
@@ -81,22 +81,6 @@ const statusBadge = (s) =>
     : s === 'Blocked'
     ? 'bg-red-100 text-red-700'
     : 'bg-yellow-100 text-yellow-700';
-
-// ─── inject shimmer keyframe once ────────────────────────────────────────────
-if (typeof document !== 'undefined' && !document.getElementById('shimmer-style')) {
-  const style = document.createElement('style');
-  style.id = 'shimmer-style';
-  style.textContent = `
-    @keyframes shimmer {
-      0%   { background-position: 100% 0; }
-      100% { background-position: -100% 0; }
-    }
-    .animate-shimmer {
-      animation: shimmer 3.4s ease-in-out infinite;
-    }
-  `;
-  document.head.appendChild(style);
-}
 
 export default function Customers() {
   const {
@@ -172,7 +156,7 @@ export default function Customers() {
             <h1 className="text-lg sm:text-2xl font-semibold text-gray-900">Customers</h1>
             <p className="text-xs sm:text-sm text-gray-500 transition-all duration-300">
               {loading ? (
-                <span className="inline-block w-28 h-3 rounded bg-gray-200 animate-shimmer align-middle" />
+                <span className="inline-block w-28 h-3 rounded bg-[#d4a13f]/10 animate-pulse align-middle" />
               ) : (
                 `${totalCount} total customers`
               )}
@@ -720,17 +704,8 @@ export default function Customers() {
         </div>
       )}
 
-      {/* ── Global keyframes ── */}
+      {/* ── Entry animations ── */}
       <style>{`
-        @keyframes shimmer {
-          0%   { background-position: 100% 0; }
-          100% { background-position: -100% 0; }
-        }
-        .animate-shimmer {
-          background: linear-gradient(90deg, #e2e8f0 25%, #f1f5f9 50%, #e2e8f0 75%);
-          background-size: 400% 100%;
-          animation: shimmer 3.4s ease-in-out infinite;
-        }
         @keyframes fadeSlideIn {
           from { opacity: 0; transform: translateY(6px); }
           to   { opacity: 1; transform: translateY(0);   }

@@ -14,20 +14,11 @@ import { useState } from "react";
 
 const API_URL = "http://localhost:5000/api/v1";
 
-/* Default reorder level.
-   Current MongoDB Product model-la reorderLevel field illa,
-   so old MySQL value madhiri 10 use pannrom. */
-const DEFAULT_REORDER_LEVEL = 10;
-
-const getReorderLevel = (item) =>
-  Number(item.reorderLevel ?? item.reorder_level ?? DEFAULT_REORDER_LEVEL);
-
-const getStockStatus = (item) => {
+const getStockStatus = (item, lowStockThreshold) => {
   const stock = Number(item.stock || 0);
-  const reorderLevel = getReorderLevel(item);
 
   if (stock <= 0) return "Out of Stock";
-  if (stock <= reorderLevel) return "Low Stock";
+  if (stock <= lowStockThreshold) return "Low Stock";
   return "In Stock";
 };
 
@@ -80,6 +71,8 @@ export default function Inventory() {
     currentPage,
     totalPages,
     totalProducts,
+    lowStockCount,
+    lowStockThreshold,
     setSearchTerm,
     setFilterCategory,
     setFilterStatus,
@@ -94,15 +87,11 @@ export default function Inventory() {
 
   /* KPI COUNTS */
   const inStockCount = data.filter(
-    (item) => getStockStatus(item) === "In Stock"
-  ).length;
-
-  const lowStockCount = data.filter(
-    (item) => getStockStatus(item) === "Low Stock"
+    (item) => getStockStatus(item, lowStockThreshold) === "In Stock"
   ).length;
 
   const outOfStockCount = data.filter(
-    (item) => getStockStatus(item) === "Out of Stock"
+    (item) => getStockStatus(item, lowStockThreshold) === "Out of Stock"
   ).length;
 
   const openStockModal = (item) => {
@@ -385,10 +374,7 @@ export default function Inventory() {
               ) : (
                 data.map((item) => {
                   const status =
-                    getStockStatus(item);
-
-                  const reorderLevel =
-                    getReorderLevel(item);
+                    getStockStatus(item, lowStockThreshold);
 
                   return (
                     <tr
@@ -414,7 +400,7 @@ export default function Inventory() {
 
                       {/* REORDER LEVEL */}
                       <td className="p-4 text-center">
-                        {reorderLevel}
+                        {lowStockThreshold ?? "—"}
                       </td>
 
                       {/* STATUS */}

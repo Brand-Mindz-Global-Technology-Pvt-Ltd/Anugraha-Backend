@@ -25,6 +25,7 @@ export default function ProductCreate({
 
   const [brand, setBrand] = useState("");
   const [price, setPrice] = useState("");
+  const [costPrice, setCostPrice] = useState("");
   const [stock, setStock] = useState("");
 
   const [status, setStatus] = useState("Active");
@@ -152,6 +153,10 @@ export default function ProductCreate({
         product.price ?? ""
       );
 
+      setCostPrice(
+        String(product.costPrice ?? "")
+      );
+
       setStock(
         product.stock ?? ""
       );
@@ -233,6 +238,17 @@ export default function ProductCreate({
       return;
     }
 
+    const normalizedCostPrice = costPrice.trim();
+    const parsedCostPrice = Number(normalizedCostPrice);
+    if (
+      (!isEdit && normalizedCostPrice === "") ||
+      (normalizedCostPrice !== "" &&
+        (!Number.isFinite(parsedCostPrice) || parsedCostPrice < 0))
+    ) {
+      alert("Enter a valid non-negative cost price");
+      return;
+    }
+
     if (
       Number(price) < 0 ||
       Number(stock) < 0
@@ -286,6 +302,13 @@ export default function ProductCreate({
         "price",
         String(price)
       );
+
+      if (!isEdit || normalizedCostPrice !== "") {
+        formData.append(
+          "costPrice",
+          String(parsedCostPrice)
+        );
+      }
 
       formData.append(
         "stock",
@@ -540,6 +563,27 @@ export default function ProductCreate({
                     }
                     placeholder="Enter price"
                     className="w-full border bg-white rounded-lg px-4 py-3 outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-2">
+                    Cost Price (₹)
+                  </label>
+
+                  <input
+                    type="number"
+                    min="0"
+                    step="any"
+                    value={costPrice}
+                    onChange={(e) =>
+                      setCostPrice(
+                        e.target.value
+                      )
+                    }
+                    placeholder="Enter cost price"
+                    required={!isEdit}
+                    className="w-full border bg-white rounded-lg px-4 py-3 outline-none focus:border-blue-500"
                   />
                 </div>
 

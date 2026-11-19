@@ -225,10 +225,10 @@ export default function BulkUploadModal({ isOpen, onClose, onUpload }) {
             <div className="bg-white rounded-2xl max-w-6xl w-full max-h-[90vh] shadow-2xl flex flex-col">
 
                 {/* HEADER */}
-                <div className="bg-gradient-to-r from-[#162A78] to-[#1e3a9e] text-white p-6 flex justify-between items-center rounded-t-2xl">
+                <div className="bg-[#d4a13f] text-white p-6 flex justify-between items-center rounded-t-2xl">
                     <div>
                         <h2 className="text-2xl font-bold">Bulk Upload Products</h2>
-                        <p className="text-blue-100 text-sm mt-1">Upload multiple products at once using CSV or Excel file</p>
+                        <p className="text-white/90 text-sm mt-1">Upload multiple products at once using CSV or Excel file</p>
                     </div>
                     <button 
                         onClick={handleClose}
@@ -242,20 +242,20 @@ export default function BulkUploadModal({ isOpen, onClose, onUpload }) {
                 <div className="p-6 space-y-6 overflow-y-auto flex-1">
 
                     {/* DOWNLOAD TEMPLATE SECTION */}
-                    <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl p-4">
+                    <div className="bg-white border border-[#d4a13f]/50 rounded-xl p-4">
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-3">
-                                <div className="bg-green-500 p-2 rounded-lg">
+                                <div className="bg-[#d4a13f] p-2 rounded-lg">
                                     <FileSpreadsheet className="text-white" size={24} />
                                 </div>
                                 <div>
-                                    <h3 className="font-semibold text-green-900">Download Template First</h3>
-                                    <p className="text-sm text-green-700">Use our pre-formatted template to ensure correct data structure</p>
+                                    <h3 className="font-semibold text-slate-900">Download Template First</h3>
+                                    <p className="text-sm text-slate-700">Use our pre-formatted template to ensure correct data structure</p>
                                 </div>
                             </div>
                             <button
                                 onClick={downloadTemplate}
-                                className="flex items-center gap-2 px-5 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors shadow-md"
+                                className="flex items-center gap-2 px-5 py-2.5 bg-[#d4a13f] hover:bg-[#bd8e32] text-white rounded-lg font-medium transition-colors shadow-sm"
                             >
                                 <Download size={18} />
                                 Download Template
@@ -272,13 +272,13 @@ export default function BulkUploadModal({ isOpen, onClose, onUpload }) {
                             onDrop={handleDrop}
                             className={`border-3 border-dashed p-12 text-center rounded-xl transition-all ${
                                 dragActive 
-                                    ? "border-blue-600 bg-blue-50 scale-[1.02]" 
-                                    : "border-gray-300 hover:border-gray-400 hover:bg-gray-50"
+                                    ? "border-[#d4a13f] bg-[#d4a13f]/10 scale-[1.02]"
+                                    : "border-slate-300 hover:border-[#d4a13f] bg-white"
                             }`}
                         >
                             <div className="flex flex-col items-center gap-4">
-                                <div className={`p-4 rounded-full ${dragActive ? 'bg-blue-100' : 'bg-gray-100'}`}>
-                                    <Upload size={40} className={dragActive ? "text-blue-600" : "text-gray-400"} />
+                                <div className={`p-4 rounded-full ${dragActive ? 'bg-[#d4a13f]/10' : 'bg-white'}`}>
+                                    <Upload size={40} className={dragActive ? "text-[#b8860b]" : "text-slate-500"} />
                                 </div>
                                 <div>
                                     <p className="text-lg font-semibold text-gray-700">

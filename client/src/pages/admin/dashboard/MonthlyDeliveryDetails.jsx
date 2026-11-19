@@ -57,20 +57,20 @@ const VolumeService = () => {
     const rate      = total > 0 ? ((delivered / total) * 100).toFixed(1) : 0;
     return (
       <div style={{
-        background: "#0f172a",
-        border: "1px solid #1e293b",
+        background: "#ffffff",
+        border: "1px solid #e2e8f0",
         borderRadius: "10px",
         padding: "10px 14px",
         fontSize: "12px",
-        color: "#f8fafc",
-        boxShadow: "0 8px 32px rgba(0,0,0,0.3)",
+        color: "#172033",
+        boxShadow: "0 8px 24px rgba(15,23,42,0.08)",
         minWidth: "150px",
       }}>
-        <p style={{ color: "#94a3b8", marginBottom: 8, fontWeight: 600 }}>{label}</p>
-        <p style={{ color: "#0dd99a", margin: "3px 0" }}>Total: <strong>{total.toLocaleString("en-IN")}</strong></p>
-        <p style={{ color: "#60a5fa", margin: "3px 0" }}>Delivered: <strong>{delivered.toLocaleString("en-IN")}</strong></p>
-        <div style={{ borderTop: "1px solid #1e293b", marginTop: 8, paddingTop: 6 }}>
-          <p style={{ color: "#94a3b8", margin: 0 }}>Rate: <strong style={{ color: "#f8fafc" }}>{rate}%</strong></p>
+        <p style={{ color: "#465064", marginBottom: 8, fontWeight: 600 }}>{label}</p>
+        <p style={{ color: "#b8860b", margin: "3px 0" }}>Total: <strong>{total.toLocaleString("en-IN")}</strong></p>
+        <p style={{ color: "#172033", margin: "3px 0" }}>Delivered: <strong>{delivered.toLocaleString("en-IN")}</strong></p>
+        <div style={{ borderTop: "1px solid #e2e8f0", marginTop: 8, paddingTop: 6 }}>
+          <p style={{ color: "#465064", margin: 0 }}>Rate: <strong style={{ color: "#172033" }}>{rate}%</strong></p>
         </div>
       </div>
     );
@@ -93,9 +93,9 @@ const VolumeService = () => {
           onClick={handleExport}
           className="flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-xl text-xs font-semibold transition-all flex-shrink-0"
           style={{
-            background: "linear-gradient(135deg, #10b981, #059669)",
+            background: "#d4a13f",
             color: "#fff",
-            boxShadow: "0 2px 12px rgba(16,185,129,0.35)",
+            boxShadow: "0 2px 12px rgba(212,161,63,0.18)",
           }}
         >
           <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 sm:h-3.5 sm:w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -112,13 +112,13 @@ const VolumeService = () => {
         {/* Total Orders */}
         <div
           className="rounded-xl p-2.5 sm:p-3.5"
-          style={{ background: "#f0fdf4", border: "1px solid #bbf7d0" }}
+          style={{ background: "#ffffff", border: "1px solid #e2e8f0" }}
         >
           <div className="flex items-center gap-1.5 mb-1.5 sm:mb-2">
-            <div className="w-2 h-2 rounded-full bg-emerald-400 flex-shrink-0" />
+            <div className="w-2 h-2 rounded-full bg-[#d4a13f] flex-shrink-0" />
             <p className="text-xs text-slate-500 font-medium">Total Orders</p>
           </div>
-          <p className="text-lg sm:text-xl font-bold text-emerald-600">
+          <p className="text-lg sm:text-xl font-bold text-[#b8860b]">
             {totals.totalOrders.toLocaleString("en-IN")}
           </p>
           <p className="text-xs text-slate-400 mt-0.5">Last 6 months</p>
@@ -127,13 +127,13 @@ const VolumeService = () => {
         {/* Delivered */}
         <div
           className="rounded-xl p-2.5 sm:p-3.5"
-          style={{ background: "#eff6ff", border: "1px solid #dbeafe" }}
+          style={{ background: "#ffffff", border: "1px solid #e2e8f0" }}
         >
           <div className="flex items-center gap-1.5 mb-1.5 sm:mb-2">
-            <div className="w-2 h-2 rounded-full bg-blue-500 flex-shrink-0" />
+            <div className="w-2 h-2 rounded-full bg-slate-900 flex-shrink-0" />
             <p className="text-xs text-slate-500 font-medium">Delivered</p>
           </div>
-          <p className="text-lg sm:text-xl font-bold text-blue-600">
+          <p className="text-lg sm:text-xl font-bold text-slate-900">
             {totals.deliveredOrders.toLocaleString("en-IN")}
           </p>
           <p className="text-xs text-slate-400 mt-0.5">Successfully done</p>
@@ -142,13 +142,13 @@ const VolumeService = () => {
         {/* Pending */}
         <div
           className="rounded-xl p-2.5 sm:p-3.5"
-          style={{ background: "#fff7ed", border: "1px solid #fed7aa" }}
+          style={{ background: "#ffffff", border: "1px solid #e2e8f0" }}
         >
           <div className="flex items-center gap-1.5 mb-1.5 sm:mb-2">
-            <div className="w-2 h-2 rounded-full bg-orange-400 flex-shrink-0" />
+            <div className="w-2 h-2 rounded-full bg-[#d4a13f] flex-shrink-0" />
             <p className="text-xs text-slate-500 font-medium">Pending</p>
           </div>
-          <p className="text-lg sm:text-xl font-bold text-orange-500">
+          <p className="text-lg sm:text-xl font-bold text-[#b8860b]">
             {pendingOrders.toLocaleString("en-IN")}
           </p>
           <p className="text-xs text-slate-400 mt-0.5">Not yet delivered</p>
@@ -157,19 +157,19 @@ const VolumeService = () => {
         {/* Delivery Rate */}
         <div
           className="rounded-xl p-2.5 sm:p-3.5"
-          style={{ background: "#fafafa", border: "1px solid #e2e8f0" }}
+          style={{ background: "#ffffff", border: "1px solid #e2e8f0" }}
         >
           <div className="flex items-center gap-1.5 mb-1.5 sm:mb-2">
             <div className="w-2 h-2 rounded-full bg-slate-400 flex-shrink-0" />
             <p className="text-xs text-slate-500 font-medium">Delivery Rate</p>
           </div>
-          <p className="text-lg sm:text-xl font-bold text-slate-700">{deliveryRate}%</p>
+          <p className="text-lg sm:text-xl font-bold text-slate-900">{deliveryRate}%</p>
           <div className="mt-1.5 w-full rounded-full h-1" style={{ background: "#e2e8f0" }}>
             <div
               className="h-1 rounded-full"
               style={{
                 width: `${deliveryRate}%`,
-                background: "linear-gradient(90deg, #10b981, #2563eb)",
+                background: "#d4a13f",
               }}
             />
           </div>
@@ -178,7 +178,7 @@ const VolumeService = () => {
       </div>
 
       {/* ── Chart ── */}
-      <div style={{ background: "#f8fafc", borderRadius: "14px", padding: "12px 4px 8px" }}>
+      <div style={{ background: "#ffffff", borderRadius: "14px", padding: "12px 4px 8px" }}>
         <ResponsiveContainer width="100%" height={175}>
           <BarChart
             data={chartData}
@@ -191,24 +191,24 @@ const VolumeService = () => {
               dataKey="name"
               axisLine={false}
               tickLine={false}
-              tick={{ fill: "#94a3b8", fontSize: 10, fontWeight: 500 }}
+              tick={{ fill: "#465064", fontSize: 10, fontWeight: 500 }}
               interval={0}
             />
             <YAxis
               axisLine={false}
               tickLine={false}
-              tick={{ fill: "#94a3b8", fontSize: 10 }}
+              tick={{ fill: "#465064", fontSize: 10 }}
               width={28}
             />
             <Tooltip content={<CustomTooltip />} cursor={{ fill: "rgba(2,6,23,0.04)" }} />
             <Bar dataKey="totalOrders" radius={[5, 5, 3, 3]}>
               {chartData.map((_, i) => (
-                <Cell key={`total-${i}`} fill="#0dd99a" fillOpacity={0.85} />
+                <Cell key={`total-${i}`} fill="#d4a13f" fillOpacity={0.85} />
               ))}
             </Bar>
             <Bar dataKey="deliveredOrders" radius={[5, 5, 3, 3]}>
               {chartData.map((_, i) => (
-                <Cell key={`delivered-${i}`} fill="#2563eb" fillOpacity={0.85} />
+                <Cell key={`delivered-${i}`} fill="#172033" fillOpacity={0.85} />
               ))}
             </Bar>
           </BarChart>
@@ -218,21 +218,21 @@ const VolumeService = () => {
       {/* ── Legend ── */}
       <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mt-3 sm:mt-4 px-1">
         <div className="flex items-center gap-1.5">
-          <div className="w-3 h-3 rounded flex-shrink-0" style={{ background: "#0dd99a" }} />
+          <div className="w-3 h-3 rounded flex-shrink-0" style={{ background: "#d4a13f" }} />
           <span className="text-xs text-slate-500 font-medium">Total</span>
           <span className="text-xs font-bold text-slate-700">
             {totals.totalOrders.toLocaleString("en-IN")}
           </span>
         </div>
         <div className="flex items-center gap-1.5">
-          <div className="w-3 h-3 rounded flex-shrink-0" style={{ background: "#2563eb" }} />
+          <div className="w-3 h-3 rounded flex-shrink-0" style={{ background: "#172033" }} />
           <span className="text-xs text-slate-500 font-medium">Delivered</span>
           <span className="text-xs font-bold text-slate-700">
             {totals.deliveredOrders.toLocaleString("en-IN")}
           </span>
         </div>
         <div className="flex items-center gap-1.5">
-          <div className="w-3 h-3 rounded flex-shrink-0" style={{ background: "#fb923c" }} />
+          <div className="w-3 h-3 rounded flex-shrink-0" style={{ background: "#b8860b" }} />
           <span className="text-xs text-slate-500 font-medium">Pending</span>
           <span className="text-xs font-bold text-slate-700">
             {pendingOrders.toLocaleString("en-IN")}

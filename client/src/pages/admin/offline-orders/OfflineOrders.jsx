@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 
 const API_URL = `${import.meta.env.VITE_API_URL}/offline-orders`;
+const PRODUCTS_API_URL = `${import.meta.env.VITE_API_URL}/products/product-list`;
 
 const emptyForm = {
     customerName: "Walk-in Customer",
@@ -36,10 +37,74 @@ export default function OfflineOrders() {
     const [showForm, setShowForm] = useState(false);
     const [selectedOrder, setSelectedOrder] = useState(null);
     const [form, setForm] = useState(emptyForm);
+    const [productItems, setProductItems] = useState([]);
+    const [productSearch, setProductSearch] = useState("");
+    const [productResults, setProductResults] = useState([]);
+    const [productSearchLoading, setProductSearchLoading] = useState(false);
+    const [productSearchError, setProductSearchError] = useState("");
 
     useEffect(() => {
         fetchOrders();
     }, []);
+
+    useEffect(() => {
+        const searchTerm = productSearch.trim();
+        if (!showForm || searchTerm.length < 2) {
+            setProductResults([]);
+            setProductSearchLoading(false);
+            setProductSearchError("");
+            return undefined;
+        }
+
+        let cancelled = false;
+        const timeout = setTimeout(async () => {
+            try {
+                setProductSearchLoading(true);
+                setProductSearchError("");
+
+                const token = localStorage.getItem("token");
+                const res = await axios.get(PRODUCTS_API_URL, {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                    params: {
+                        page: 1,
+                        limit: 20,
+                        search: searchTerm,
+                    },
+                });
+
+                if (!cancelled) {
+                    setProductResults(res.data?.data || []);
+                }
+            } catch (error) {
+                if (!cancelled) {
+                    setProductSearchError(
+                        error.response?.data?.message ||
+                        "Failed to search products"
+                    );
+                }
+            } finally {
+                if (!cancelled) {
+                    setProductSearchLoading(false);
+                }
+            }
+        }, 250);
+
+        return () => {
+            cancelled = true;
+            clearTimeout(timeout);
+        };
+    }, [productSearch, showForm]);
+
+    const hasProductItems = productItems.length > 0;
+    const productItemsTotal = productItems.reduce(
+        (sum, item) => sum + Number(item.price || 0) * Number(item.qty || 0),
+        0
+    );
+    const itemsSoldValue = hasProductItems
+        ? productItems.map((item) => `${item.name} x${item.qty || 0}`).join(", ")
+        : form.itemsSold;
 
     const fetchOrders = async () => {
         try {
@@ -72,6 +137,30 @@ export default function OfflineOrders() {
         }));
     };
 
+    const addProductItem = (product) => {
+        setProductItems((current) => [
+            ...current,
+            {
+                productId: product._id,
+                name: product.name,
+                price: String(product.price ?? ""),
+                qty: "1",
+            },
+        ]);
+        setProductSearch("");
+        setProductResults([]);
+    };
+
+    const updateProductItem = (index, field, value) => {
+        setProductItems((current) =>
+            current.map((item, itemIndex) =>
+                itemIndex === index
+                    ? { ...item, [field]: value }
+                    : item
+            )
+        );
+    };
+
     const handleSave = async (e) => {
         e.preventDefault();
 
@@ -80,13 +169,36 @@ export default function OfflineOrders() {
             return;
         }
 
-        if (!form.itemsSold.trim()) {
+        if (!hasProductItems && !form.itemsSold.trim()) {
             alert("Items sold is required");
             return;
         }
 
-        if (!form.totalAmount) {
-            alert("Total amount is required");
+        if (
+            hasProductItems &&
+            productItems.some(
+                (item) =>
+                    !item.productId ||
+                    item.price.trim() === "" ||
+                    !Number.isFinite(Number(item.price)) ||
+                    Number(item.price) < 0 ||
+                    !Number.isInteger(Number(item.qty)) ||
+                    Number(item.qty) < 1
+            )
+        ) {
+            alert("Enter a valid selling price and quantity for each product");
+            return;
+        }
+
+        const totalAmount = hasProductItems
+            ? productItemsTotal
+            : Number(form.totalAmount);
+        if (
+            (!hasProductItems && form.totalAmount.trim() === "") ||
+            !Number.isFinite(totalAmount) ||
+            totalAmount < 0
+        ) {
+            alert("Enter a valid non-negative total amount");
             return;
         }
 
@@ -97,8 +209,17 @@ export default function OfflineOrders() {
                 customerName:
                     form.customerName.trim() || "Walk-in Customer",
                 salesperson: form.salesperson.trim(),
-                itemsSold: form.itemsSold.trim(),
-                totalAmount: Number(form.totalAmount),
+                itemsSold: itemsSoldValue.trim(),
+                ...(hasProductItems
+                    ? {
+                        items: productItems.map((item) => ({
+                            productId: item.productId,
+                            price: Number(item.price),
+                            qty: Number(item.qty),
+                        })),
+                    }
+                    : {}),
+                totalAmount,
                 paymentMethod: form.paymentMethod,
                 status: form.status,
             });
@@ -106,6 +227,8 @@ export default function OfflineOrders() {
             alert("Offline sale saved successfully");
 
             setForm(emptyForm);
+            setProductItems([]);
+            setProductSearch("");
             setShowForm(false);
             fetchOrders();
         } catch (error) {
@@ -172,6 +295,8 @@ export default function OfflineOrders() {
                     <button
                         onClick={() => {
                             setForm(emptyForm);
+                            setProductItems([]);
+                            setProductSearch("");
                             setShowForm((prev) => !prev);
                         }}
                         className="flex items-center gap-2 bg-[#d4a13f] hover:bg-[#bd8e32] px-5 py-3 rounded-lg font-medium"
@@ -237,11 +362,16 @@ export default function OfflineOrders() {
 
                                 <input
                                     name="itemsSold"
-                                    value={form.itemsSold}
+                                    value={itemsSoldValue}
                                     onChange={handleChange}
+                                    readOnly={hasProductItems}
+                                    required={!hasProductItems}
                                     placeholder="e.g. Gold Chain, Earrings"
                                     className="w-full border bg-white rounded-lg px-4 py-3"
                                 />
+                                <p className="mt-1 text-xs text-slate-500">
+                                    Product-wise entries are saved for gross profit. Text-only sales remain supported.
+                                </p>
                             </div>
 
                             <div>
@@ -252,9 +382,17 @@ export default function OfflineOrders() {
                                 <input
                                     type="number"
                                     name="totalAmount"
-                                    value={form.totalAmount}
+                                    min="0"
+                                    step="any"
+                                    value={
+                                        hasProductItems
+                                            ? productItemsTotal.toFixed(2)
+                                            : form.totalAmount
+                                    }
                                     onChange={handleChange}
                                     placeholder="Enter amount"
+                                    readOnly={hasProductItems}
+                                    required
                                     className="w-full border bg-white rounded-lg px-4 py-3"
                                 />
                             </div>
@@ -298,6 +436,128 @@ export default function OfflineOrders() {
                                     </option>
                                 </select>
                             </div>
+                        </div>
+
+                        <div className="mt-5 rounded-xl border border-slate-200 bg-white p-4">
+                            <h3 className="font-semibold text-slate-900">
+                                Product-wise profit details
+                            </h3>
+                            <p className="mt-1 text-xs text-slate-500">
+                                Add products to save the selling price, quantity, and current cost-price snapshot. Existing text-only sales remain available, with profit shown as unavailable.
+                            </p>
+
+                            <label className="mt-4 block text-sm font-medium text-slate-700">
+                                Search products
+                                <input
+                                    value={productSearch}
+                                    onChange={(event) =>
+                                        setProductSearch(event.target.value)
+                                    }
+                                    placeholder="Enter at least 2 characters"
+                                    className="mt-2 w-full rounded-lg border bg-white px-4 py-3"
+                                />
+                            </label>
+
+                            {productSearchLoading && (
+                                <p className="mt-2 text-sm text-slate-500">
+                                    Searching products...
+                                </p>
+                            )}
+                            {productSearchError && (
+                                <p role="alert" className="mt-2 text-sm text-red-600">
+                                    {productSearchError}
+                                </p>
+                            )}
+                            {productResults.length > 0 && (
+                                <div className="mt-2 max-h-48 overflow-y-auto rounded-lg border">
+                                    {productResults.map((product) => (
+                                        <button
+                                            key={product._id}
+                                            type="button"
+                                            onClick={() => addProductItem(product)}
+                                            className="flex w-full items-center justify-between border-b px-4 py-3 text-left last:border-b-0 hover:bg-slate-50"
+                                        >
+                                            <span className="font-medium text-slate-800">
+                                                {product.name}
+                                            </span>
+                                            <span className="text-sm text-slate-600">
+                                                {formatPrice(product.price)}
+                                            </span>
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
+
+                            {productItems.length > 0 && (
+                                <div className="mt-4 space-y-3">
+                                    {productItems.map((item, index) => (
+                                        <div
+                                            key={`${item.productId}-${index}`}
+                                            className="grid grid-cols-1 gap-3 rounded-lg border border-slate-200 p-3 sm:grid-cols-[minmax(0,1fr)_9rem_7rem_auto] sm:items-end"
+                                        >
+                                            <div>
+                                                <p className="text-xs font-medium text-slate-500">
+                                                    Product
+                                                </p>
+                                                <p className="mt-1 font-medium text-slate-900">
+                                                    {item.name}
+                                                </p>
+                                            </div>
+                                            <label className="text-xs font-medium text-slate-600">
+                                                Selling price (₹)
+                                                <input
+                                                    type="number"
+                                                    min="0"
+                                                    step="any"
+                                                    value={item.price}
+                                                    onChange={(event) =>
+                                                        updateProductItem(
+                                                            index,
+                                                            "price",
+                                                            event.target.value
+                                                        )
+                                                    }
+                                                    className="mt-1 w-full rounded-lg border px-3 py-2 text-sm"
+                                                    required
+                                                />
+                                            </label>
+                                            <label className="text-xs font-medium text-slate-600">
+                                                Quantity
+                                                <input
+                                                    type="number"
+                                                    min="1"
+                                                    step="1"
+                                                    value={item.qty}
+                                                    onChange={(event) =>
+                                                        updateProductItem(
+                                                            index,
+                                                            "qty",
+                                                            event.target.value
+                                                        )
+                                                    }
+                                                    className="mt-1 w-full rounded-lg border px-3 py-2 text-sm"
+                                                    required
+                                                />
+                                            </label>
+                                            <button
+                                                type="button"
+                                                onClick={() =>
+                                                    setProductItems((current) =>
+                                                        current.filter(
+                                                            (_, itemIndex) =>
+                                                                itemIndex !== index
+                                                        )
+                                                    )
+                                                }
+                                                className="inline-flex h-10 items-center justify-center rounded-lg border px-3 text-slate-600 hover:bg-red-50 hover:text-red-600"
+                                                aria-label={`Remove ${item.name}`}
+                                            >
+                                                <Trash2 size={16} />
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
                         </div>
 
                         <div className="flex gap-3 mt-6">

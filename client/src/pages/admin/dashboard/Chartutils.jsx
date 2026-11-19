@@ -1,19 +1,20 @@
 export const tooltipStyle = {
   contentStyle: {
-    background: "#020617",
-    border: "1px solid #1e293b",
+    background: "#ffffff",
+    border: "1px solid #e2e8f0",
     borderRadius: 8,
     fontSize: 12,
+    color: "#172033",
   },
 };
 
 export const colorMap = {
-  blue:    { text: "text-blue-600",    border: "border-blue-300"    },
-  cyan:    { text: "text-cyan-600",    border: "border-cyan-300"    },
-  emerald: { text: "text-emerald-600", border: "border-emerald-300" },
-  teal:    { text: "text-teal-600",    border: "border-teal-300"    },
-  purple:  { text: "text-purple-600",  border: "border-purple-300"  },
-  orange:  { text: "text-orange-600",  border: "border-orange-300"  },
+  blue:    { text: "text-[#b8860b]", border: "border-[#d4a13f]/50" },
+  cyan:    { text: "text-[#b8860b]", border: "border-[#d4a13f]/50" },
+  emerald: { text: "text-[#b8860b]", border: "border-[#d4a13f]/50" },
+  teal:    { text: "text-[#b8860b]", border: "border-[#d4a13f]/50" },
+  purple:  { text: "text-[#b8860b]", border: "border-[#d4a13f]/50" },
+  orange:  { text: "text-[#b8860b]", border: "border-[#d4a13f]/50" },
 };
 
 export const LegendDot = ({ color, label, value }) => (
