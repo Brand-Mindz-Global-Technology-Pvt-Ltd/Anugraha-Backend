@@ -1,4 +1,4 @@
-import Customer from "../Models/Customer.js";
+import Customer from "../Models/customer.js";
 
 const generateCustomerId = async () => {
   const count = await Customer.countDocuments();
